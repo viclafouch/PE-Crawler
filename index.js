@@ -1,55 +1,65 @@
 const HCCrawler = require('headless-chrome-crawler')
 
 const linksCrolled = []
+const baseUrl = 'https://support.google.com/youtube'
+const baseUrlAnswer = baseUrl + '/answer'
+const baseUrlTopics = baseUrl + '/topic'
 
 const params = {
-  maxDepth: 0
+  maxDepth: 3
 }
 
-function getInfosByUrl(url) {
+function getId(url) {
   const { pathname } = new URL(url)
   const id = pathname.slice(pathname.lastIndexOf('/') + 1)
-  return {
-    id: !isNaN(id) ? id : null,
-    url
-  }
+  return parseInt(id, 10)
 }
 
 ;(async () => {
-  const crawler = await HCCrawler.launch({
-    preRequest: options => {
-      return linksCrolled.some(e => options.url === e.url) ? false : options
-    },
-    evaluatePage: () => ({
-      title: $('h1').text()
-    }),
-    onSuccess: async result => {
-      const { title } = result.result
-      try {
-        linksCrolled.push({
-          ...getInfosByUrl(result.options.url),
-          title
-        })
-        const links = result.links.filter(
-          link =>
-            link.startsWith('https://support.google.com/youtube/topic/') ||
-            link.startsWith('https://support.google.com/youtube/answer/')
-        )
-        for (const link of links) {
-          await crawler.queue({ url: link })
+  const startDate = new Date().getTime()
+  try {
+    const crawler = await HCCrawler.launch({
+      maxRequest: 50,
+      preRequest: options => {
+        if (
+          options.url.startsWith(baseUrlAnswer) ||
+          options.url.startsWith(baseUrlTopics) ||
+          options.url === baseUrl
+        ) {
+          if (options.url.startsWith(baseUrlAnswer)) {
+            const id = getId(options.url)
+            if (linksCrolled.some(e => e.id === id)) return false
+          }
+          return options
         }
-      } catch (error) {
-        console.error(error)
+        return false
+      },
+      evaluatePage: () => ({
+        title: $('h1')
+          .text()
+          .trim()
+      }),
+      onSuccess: ({ result, options }) => {
+        const id = getId(options.url)
+        if (!isNaN(id) && options.url.startsWith(baseUrlAnswer)) {
+          linksCrolled.push({
+            id,
+            title: result.title,
+            url: baseUrlAnswer + '/' + id
+          })
+        }
       }
-    },
-    onError: error => {
-      console.log(error)
-    }
-  })
-  await crawler.queue({
-    ...params,
-    url: 'https://support.google.com/youtube/'
-  })
-  await crawler.onIdle()
-  await crawler.close()
+    })
+    await crawler.queue({
+      ...params,
+      url: baseUrl
+    })
+    await crawler.onIdle()
+    await crawler.close()
+  } catch (error) {}
+  console.log(
+    `Get ${linksCrolled.length} after ${Math.round(
+      (new Date().getTime() - startDate) / 1000
+    ).toFixed(2)} s`
+  )
 })()
