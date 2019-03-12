@@ -18,6 +18,7 @@
   "prettier": {
     "tabWidth": 2,
     "semi": false,
+    "printWidth": 200,
     "singleQuote": true
   },
   "devDependencies": {

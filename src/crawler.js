@@ -1,7 +1,7 @@
 import { YOUTUBE_PRODUCT } from './constants'
 const HCCrawler = require('headless-chrome-crawler')
 
-const linksCrolled = []
+const cards = []
 const baseUrl = 'https://support.google.com/youtube'
 const baseUrlAnswer = baseUrl + '/answer'
 const baseUrlTopics = baseUrl + '/topic'
@@ -19,14 +19,10 @@ const crawl = orm =>
     delay: 5000,
     retryCount: 0,
     preRequest: options => {
-      if (
-        options.url.startsWith(baseUrlAnswer) ||
-        options.url.startsWith(baseUrlTopics) ||
-        options.url === baseUrl
-      ) {
+      if (options.url.startsWith(baseUrlAnswer) || options.url.startsWith(baseUrlTopics) || options.url === baseUrl) {
         if (options.url.startsWith(baseUrlAnswer)) {
           const id = getId(options.url)
-          if (linksCrolled.some(e => e.id === id)) return false
+          if (cards.some(e => e.id === id)) return false
         }
         return options
       }
@@ -48,7 +44,7 @@ const crawl = orm =>
             lang: 'fr',
             url: baseUrlAnswer + '/' + id
           }
-          linksCrolled.push(datas)
+          cards.push(datas)
           const card = await orm.Card.findOne({
             where: {
               id
@@ -56,7 +52,7 @@ const crawl = orm =>
           })
           if (!card) {
             await orm.Card.create(datas)
-          } else if (card.title !== datas.title) {
+          } else {
             await orm.Card.update(
               {
                 title: datas.title
@@ -69,7 +65,7 @@ const crawl = orm =>
             )
           }
 
-          console.log('TCL: linksCrolled', linksCrolled.length)
+          console.log('TCL: cards', cards.length)
         }
       } catch (error) {
         console.log(error)
@@ -92,4 +88,5 @@ export default async orm => {
 
   await crawler.onIdle() // Resolved when no queue is left
   await crawler.close() // Close the crawler
+  return cards
 }
