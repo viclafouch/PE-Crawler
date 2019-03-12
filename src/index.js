@@ -8,6 +8,7 @@ const orm = createDatabase({
 
 async function init() {
   try {
+    await orm.Card.sync({ force: true })
     await crawler(orm)
     setTimeout(() => init(), 1000 * 60 * 60 * 24)
   } catch (error) {

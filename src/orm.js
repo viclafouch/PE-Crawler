@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize')
 
-export const createDatabase = async ({ storage }) => {
+export const createDatabase = ({ storage }) => {
   const database = new Sequelize('database', 'viclafouch', '123', {
     host: 'localhost',
     dialect: 'sqlite',
@@ -37,8 +37,6 @@ export const createDatabase = async ({ storage }) => {
       timestamps: true
     }
   )
-
-  await Card.sync({ force: true })
 
   return { database, Card }
 }
