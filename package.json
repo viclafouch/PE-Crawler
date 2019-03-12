@@ -4,16 +4,26 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node build/index.js",
+    "prestart": "cm build"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "headless-chrome-crawler": "^1.8.0"
+    "headless-chrome-crawler": "^1.8.0",
+    "mysql": "^2.16.0",
+    "sequelize": "^4.43.0",
+    "sqlite3": "^4.0.6"
   },
   "prettier": {
     "tabWidth": 2,
     "semi": false,
     "singleQuote": true
+  },
+  "devDependencies": {
+    "@babel/core": "^7.3.4",
+    "@babel/preset-env": "^7.3.4",
+    "centimaitre": "^1.0.3",
+    "fs-jetpack": "^2.2.2"
   }
 }
