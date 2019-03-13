@@ -13,10 +13,11 @@ async function init() {
     const start_crawling = new Date()
     await orm.Card.sync({ force: debug })
     await crawler(orm)
-    orm.Card.findAll().then(cards => {
-      const deprecated = cards.filter(e => e.updateAt.getTime() < start_crawling.getTime())
-      for (const card of deprecated) {
-        card.destroy()
+    orm.Card.destroy({
+      where: {
+        updatedAt: {
+          [Op.lt]: start_crawling
+        }
       }
     })
     setTimeout(() => init(), 1000 * 60 * 60 * 24)
