@@ -5,38 +5,62 @@ export const createDatabase = ({ storage }) => {
     host: 'localhost',
     dialect: 'sqlite',
     operatorsAliases: false,
-    storage
+    storage,
+    logging: false
   })
 
-  const Card = database.define(
-    'cards',
+  const Product = database.define(
+    'products',
     {
-      title: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      url: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      lang: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      productId: {
-        type: Sequelize.INTEGER,
-        allowNull: false
-      },
       id: {
         type: Sequelize.INTEGER,
-        primaryKey: true,
+        autoIncrement: true,
+        primaryKey: true
+      },
+      name: {
+        type: Sequelize.STRING,
         allowNull: false
+      },
+      baseUrl: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        validate: {
+          isUrl: true
+        }
       }
     },
     {
-      timestamps: true
+      timestamps: false
     }
   )
 
-  return { database, Card }
+  const Card = database.define('cards', {
+    id: {
+      type: Sequelize.INTEGER,
+      autoIncrement: true,
+      primaryKey: true
+    },
+    uuid: {
+      type: Sequelize.INTEGER,
+      allowNull: false
+    },
+    title: {
+      type: Sequelize.STRING,
+      allowNull: false
+    },
+    url: {
+      type: Sequelize.STRING,
+      allowNull: false,
+      validate: {
+        isUrl: true
+      }
+    },
+    lang: {
+      type: Sequelize.STRING,
+      allowNull: false
+    }
+  })
+
+  Card.belongsTo(Product)
+  return { database, Card, Product }
 }

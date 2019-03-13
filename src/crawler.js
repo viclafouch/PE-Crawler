@@ -1,32 +1,27 @@
-import { YOUTUBE_PRODUCT } from './constants'
+import { baseUrl } from './constants'
 const HCCrawler = require('headless-chrome-crawler')
 
-let cardsCrawled = []
-
-const baseUrl = 'https://support.google.com/youtube'
-const baseUrlAnswer = baseUrl + '/answer'
-const baseUrlTopics = baseUrl + '/topic'
-
-const getId = url => {
+const getUuid = url => {
   const { pathname } = new URL(url)
-  const id = pathname.slice(pathname.lastIndexOf('/') + 1)
-  return parseInt(id, 10)
+  const uuid = pathname.slice(pathname.lastIndexOf('/') + 1)
+  return parseInt(uuid, 10)
 }
 
-const isValidUrl = url => url.startsWith(baseUrlAnswer) || url.startsWith(baseUrlTopics) || url === baseUrl
+const isValidUrl = (url, product) =>
+  url.startsWith(product.baseUrl + '/answer/') || url.startsWith(product.baseUrl + '/topic/') || url === product.baseUrl
 
-const crawl = orm =>
+const crawl = (orm, product) =>
   HCCrawler.launch({
     maxDepth: 10,
     maxConcurrency: 5,
     // delay: 5000,
     retryCount: 0,
     preRequest: options => {
-      if (isValidUrl(options.url)) {
-        if (options.url.startsWith(baseUrlAnswer)) {
-          const id = getId(options.url)
-          if (cardsCrawled.some(e => e.id === id)) return false
-        }
+      if (isValidUrl(options.url, product)) {
+        const url = new URL(options.url)
+        url.hash = ''
+        url.search = ''
+        options.url = url.toString()
         return options
       }
       return false
@@ -38,33 +33,35 @@ const crawl = orm =>
     }),
     onSuccess: async ({ result, options }) => {
       try {
-        const id = getId(options.url)
+        const uuid = getUuid(options.url)
         const { title } = result
         const { url } = options
         const datas = {
-          id,
+          uuid,
           title,
-          productId: YOUTUBE_PRODUCT,
           lang: 'fr',
-          url: baseUrlAnswer + '/' + id
+          url: product.baseUrl + '/' + uuid
         }
 
-        if (isNaN(id) && !url.startsWith(baseUrlAnswer)) return
-
-        cardsCrawled.push(datas)
-        const card = await orm.Card.findOne({
-          where: {
-            id
-          }
-        })
-
-        if (!card) await orm.Card.create(datas)
-        else
+        if (isNaN(uuid) || !url.includes('/answer/')) return
+        if (
+          !(await orm.Card.findOne({
+            where: {
+              uuid
+            }
+          }))
+        ) {
+          console.count()
+          await orm.Card.create({
+            ...datas,
+            productId: product.id
+          })
+        } else
           await orm.Card.update(
             { title: datas.title },
             {
               where: {
-                id
+                uuid
               }
             }
           )
@@ -72,21 +69,23 @@ const crawl = orm =>
         console.log(error)
       }
     },
-    onError(error) {}
+    onError(error) {
+      console.log(error)
+    }
   })
 
 export default async orm => {
-  cardsCrawled = []
-  const crawler = await crawl(orm)
-  await crawler.queue({
-    maxDepth: 3,
-    url: baseUrl,
-    skipDuplicates: true,
-    skipRequestedRedirect: true,
-    allowedDomains: ['support.google.com']
-  })
-
-  await crawler.onIdle() // Resolved when no queue is left
-  await crawler.close() // Close the crawler
-  return cardsCrawled
+  const products = await orm.Product.findAll()
+  for (const product of products) {
+    const crawler = await crawl(orm, product)
+    await crawler.queue({
+      maxDepth: 3,
+      url: product.baseUrl,
+      skipDuplicates: true,
+      skipRequestedRedirect: true,
+      allowedDomains: [baseUrl.hostname]
+    })
+    await crawler.onIdle()
+    await crawler.close()
+  }
 }

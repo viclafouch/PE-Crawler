@@ -1,1 +1,8 @@
-export const YOUTUBE_PRODUCT = 1
+export const baseUrl = new URL('https://support.google.com')
+
+export const products = [
+  {
+    name: 'YouTube',
+    url: baseUrl.origin + '/youtube'
+  }
+]
