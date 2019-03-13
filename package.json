@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
     "headless-chrome-crawler": "^1.8.0",
     "mysql": "^2.16.0",
     "sequelize": "^4.43.0",

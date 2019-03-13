@@ -10,7 +10,7 @@ const getUuid = url => {
 const isValidUrl = (url, product) =>
   url.startsWith(product.baseUrl + '/answer/') || url.startsWith(product.baseUrl + '/topic/') || url === product.baseUrl
 
-const crawl = (orm, product) =>
+const crawl = (models, product) =>
   HCCrawler.launch({
     maxDepth: 10,
     maxConcurrency: 5,
@@ -45,19 +45,19 @@ const crawl = (orm, product) =>
 
         if (isNaN(uuid) || !url.includes('/answer/')) return
         if (
-          !(await orm.Card.findOne({
+          !(await models.Card.findOne({
             where: {
               uuid
             }
           }))
         ) {
           console.count()
-          await orm.Card.create({
+          await models.Card.create({
             ...datas,
             productId: product.id
           })
         } else
-          await orm.Card.update(
+          await models.Card.update(
             { title: datas.title },
             {
               where: {
@@ -74,10 +74,10 @@ const crawl = (orm, product) =>
     }
   })
 
-export default async orm => {
-  const products = await orm.Product.findAll()
+export default async models => {
+  const products = await models.Product.findAll()
   for (const product of products) {
-    const crawler = await crawl(orm, product)
+    const crawler = await crawl(models, product)
     await crawler.queue({
       maxDepth: 3,
       url: product.baseUrl,

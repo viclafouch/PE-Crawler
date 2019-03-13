@@ -1,19 +1,13 @@
-import path from 'path'
-import crawler from './crawler'
-import { createDatabase } from './orm'
-import { products } from './constants'
 import { Op } from 'sequelize'
-
-const debug = true
-
-const orm = createDatabase({
-  storage: path.join(__dirname, '..', 'database_test.sqlite')
-})
+import crawler from './crawler'
+import { Card, Product, orm as database } from './orm'
+import { products } from './constants'
+import server from './server'
 
 async function startCrawling() {
   const start_crawling = new Date()
-  await crawler(orm)
-  await orm.Card.destroy({
+  await crawler({ Card, Product })
+  await Card.destroy({
     where: {
       updatedAt: {
         [Op.lt]: start_crawling
@@ -23,12 +17,10 @@ async function startCrawling() {
   setTimeout(() => startCrawling(), 1000 * 60 * 60 * 24)
 }
 
-async function init() {
+async function startApp() {
   try {
-    await orm.Card.sync({ force: debug })
-    await orm.Product.sync({ force: debug })
     for (const product of products) {
-      await orm.Product.create({
+      await Product.create({
         name: product.name,
         baseUrl: product.url
       })
@@ -40,7 +32,9 @@ async function init() {
   }
 }
 
-orm.database
-  .authenticate()
-  .then(() => init())
-  .catch(err => console.error('Unable to connect to the database:', err))
+database
+  .authenticate() // Connection to Database
+  .then(async () => await database.sync({ force: true })) // Sync database
+  .then(async () => await server.listen(3000)) // Start server
+  .then(() => startApp())
+  .catch(err => console.error('Unable to start', err))

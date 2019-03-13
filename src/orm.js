@@ -1,66 +1,17 @@
-const Sequelize = require('sequelize')
+import Sequelize from 'sequelize'
+import path from 'path'
+import CardModel from './models/Card'
+import ProductModel from './models/Product'
 
-export const createDatabase = ({ storage }) => {
-  const database = new Sequelize('database', 'viclafouch', '123', {
-    host: 'localhost',
-    dialect: 'sqlite',
-    operatorsAliases: false,
-    storage,
-    logging: false
-  })
+const orm = new Sequelize('database', 'viclafouch', '123', {
+  host: 'localhost',
+  dialect: 'sqlite',
+  operatorsAliases: false,
+  storage: path.join(__dirname, '..', 'database_test.sqlite')
+})
 
-  const Product = database.define(
-    'products',
-    {
-      id: {
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
-        primaryKey: true
-      },
-      name: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      baseUrl: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        validate: {
-          isUrl: true
-        }
-      }
-    },
-    {
-      timestamps: false
-    }
-  )
+const Card = CardModel(orm, Sequelize)
+const Product = ProductModel(orm, Sequelize)
+Card.belongsTo(Product)
 
-  const Card = database.define('cards', {
-    id: {
-      type: Sequelize.INTEGER,
-      autoIncrement: true,
-      primaryKey: true
-    },
-    uuid: {
-      type: Sequelize.INTEGER,
-      allowNull: false
-    },
-    title: {
-      type: Sequelize.STRING,
-      allowNull: false
-    },
-    url: {
-      type: Sequelize.STRING,
-      allowNull: false,
-      validate: {
-        isUrl: true
-      }
-    },
-    lang: {
-      type: Sequelize.STRING,
-      allowNull: false
-    }
-  })
-
-  Card.belongsTo(Product)
-  return { database, Card, Product }
-}
+export { Product, Card, orm }
