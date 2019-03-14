@@ -18,6 +18,7 @@ async function startCrawling() {
 }
 
 async function startApp() {
+  console.log('Server is now listening')
   try {
     for (const product of products) {
       await Product.create({
@@ -25,7 +26,7 @@ async function startApp() {
         baseUrl: product.url
       })
     }
-    await startCrawling()
+    // await startCrawling()
     return
   } catch (error) {
     console.error(error)
@@ -34,7 +35,7 @@ async function startApp() {
 
 database
   .authenticate() // Connection to Database
-  .then(async () => await database.sync({ force: true })) // Sync database
+  .then(async () => await database.sync({ force: false })) // Sync database
   .then(async () => await server.listen(3000)) // Start server
   .then(() => startApp())
   .catch(err => console.error('Unable to start', err))

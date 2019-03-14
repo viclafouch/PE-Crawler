@@ -7,6 +7,7 @@ const orm = new Sequelize('database', 'viclafouch', '123', {
   host: 'localhost',
   dialect: 'sqlite',
   operatorsAliases: false,
+  logging: false,
   storage: path.join(__dirname, '..', 'database_test.sqlite')
 })
 
