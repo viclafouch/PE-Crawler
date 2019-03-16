@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "test": "./node_modules/.bin/mocha --timeout 10000 --reporter spec testBuild/*.spec.js",
     "start": "node build/index.js",
-    "prestart": "cm build"
+    "prestart": "cm build",
+    "pretest": "cm build && cm build-test"
   },
   "author": "",
   "license": "ISC",
@@ -20,7 +22,8 @@
     "mysql": "^2.16.0",
     "request": "^2.88.0",
     "sequelize": "^4.43.0",
-    "sqlite3": "^4.0.6"
+    "sqlite3": "^4.0.6",
+    "supertest": "^4.0.2"
   },
   "prettier": {
     "tabWidth": 2,

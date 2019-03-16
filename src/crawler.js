@@ -51,7 +51,6 @@ const crawl = (models, product) =>
             }
           }))
         ) {
-          console.count()
           await models.Card.create({
             ...datas,
             productId: product.id

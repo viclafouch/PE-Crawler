@@ -8,11 +8,11 @@ const orm = new Sequelize('database', 'viclafouch', '123', {
   dialect: 'sqlite',
   operatorsAliases: false,
   logging: false,
-  storage: path.join(__dirname, '..', 'database_test.sqlite')
+  storage: path.join(__dirname, '..', 'database.sqlite')
 })
 
 const Card = CardModel(orm, Sequelize)
 const Product = ProductModel(orm, Sequelize)
 Card.belongsTo(Product)
 
-export { Product, Card, orm }
+export { Card, Product, orm }

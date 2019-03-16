@@ -1,8 +1,8 @@
 import { Op } from 'sequelize'
 import crawler from './crawler'
 import { Card, Product, orm as database } from './orm'
-import { products } from './constants'
 import server from './server'
+import { products } from './constants'
 
 async function startCrawling() {
   const start_crawling = new Date()
