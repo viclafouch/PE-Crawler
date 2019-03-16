@@ -1,6 +1,7 @@
 import app from '../build/server'
 import request from 'supertest'
-import { createFakeDatabase } from './utils'
+import { createFakeDatabase, pathFakeDatabase } from './utils'
+import { unlinkSync } from 'fs'
 
 const database_test = createFakeDatabase()
 
@@ -13,8 +14,10 @@ describe('Test server', () => {
     server = await app.listen()
   })
 
-  after(done => {
-    server.close(done)
+  after(async () => {
+    await server.close()
+    unlinkSync(pathFakeDatabase)
+    console.log('close db and file removed')
   })
 
   it('root', done => {
@@ -25,7 +28,6 @@ describe('Test server', () => {
 
   it('get products', async () => {
     const t = await database_test.Product.findAll()
-    console.log(t)
 
     // request(server)
     //   .get('/products')

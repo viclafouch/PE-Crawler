@@ -1,5 +1,6 @@
-import { createFakeDatabase } from './utils'
+import { createFakeDatabase, pathFakeDatabase } from './utils'
 import { products } from '../build/constants'
+import { unlinkSync } from 'fs'
 
 const assert = require('assert').strict
 
@@ -14,7 +15,8 @@ describe('Test Database', () => {
 
   after(async () => {
     await database.db.close()
-    console.log('close db')
+    unlinkSync(pathFakeDatabase)
+    console.log('close db and file removed')
   })
 
   afterEach(async () => {
