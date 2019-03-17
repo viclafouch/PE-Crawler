@@ -1,9 +1,10 @@
 import express from 'express'
-import { Product } from '../../orm'
+import models from '../../models'
 const router = express.Router()
 
-router.get('/products', (req, res) => {
-  Product.findAll().then(products => res.json(products))
+router.get('/products', async (req, res) => {
+  const { count, rows } = await models.Product.findAndCountAll()
+  return res.status(200).json({ result: rows, count })
 })
 
 export default router

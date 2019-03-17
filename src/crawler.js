@@ -1,4 +1,4 @@
-import { baseUrl } from './constants'
+import { baseUrl, products } from './constants'
 const HCCrawler = require('headless-chrome-crawler')
 
 const getUuid = url => {
@@ -73,7 +73,7 @@ const crawl = (models, product) =>
     }
   })
 
-export default async models => {
+async function startCrawling(models) {
   const products = await models.Product.findAll()
   for (const product of products) {
     const crawler = await crawl(models, product)
@@ -88,3 +88,29 @@ export default async models => {
     await crawler.close()
   }
 }
+
+async function crawloop(models, restartAfter = 86400000) {
+  for (const product of products) {
+    await models.Product.create({
+      name: product.name,
+      baseUrl: product.url
+    })
+  }
+  const looping = async () => {
+    const start_crawling_at = new Date()
+    const { Op } = models.Sequelize
+    await startCrawling(models)
+    await models.Card.destroy({
+      where: {
+        updatedAt: {
+          [Op.lt]: start_crawling_at
+        }
+      }
+    })
+    setTimeout(() => looping(), restartAfter)
+  }
+
+  looping()
+}
+
+export default crawloop

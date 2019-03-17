@@ -1,5 +1,5 @@
-export default (sequelize, type) =>
-  sequelize.define('card', {
+export default (sequelize, type) => {
+  const Card = sequelize.define('Card', {
     id: {
       type: type.INTEGER,
       autoIncrement: true,
@@ -25,3 +25,7 @@ export default (sequelize, type) =>
       allowNull: false
     }
   })
+
+  Card.associate = models => models.Card.belongsTo(models.Product)
+  return Card
+}

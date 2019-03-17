@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --timeout 10000 --reporter spec testBuild/*.spec.js",
-    "start": "node build/index.js",
+    "test": "cross-env NODE_ENV=test ./node_modules/.bin/mocha -timeout 10000 --reporter spec testBuild/*.spec.js",
+    "start": "cross-env DEBUG=express-sequelize node ./bin/www",
     "prestart": "cm build",
     "pretest": "cm build && cm build-test"
   },
@@ -18,12 +18,11 @@
     "express": "^4.16.4",
     "headless-chrome-crawler": "^1.8.0",
     "helmet": "^3.16.0",
-    "mocha": "^6.0.2",
     "mysql": "^2.16.0",
     "request": "^2.88.0",
     "sequelize": "^4.43.0",
-    "sqlite3": "^4.0.6",
-    "supertest": "^4.0.2"
+    "sequelize-cli": "^5.4.0",
+    "sqlite3": "^4.0.6"
   },
   "prettier": {
     "tabWidth": 2,
@@ -35,6 +34,9 @@
     "@babel/core": "^7.3.4",
     "@babel/preset-env": "^7.3.4",
     "centimaitre": "^1.0.3",
-    "fs-jetpack": "^2.2.2"
+    "cross-env": "^5.2.0",
+    "fs-jetpack": "^2.2.2",
+    "mocha": "^6.0.2",
+    "supertest": "^4.0.2"
   }
 }

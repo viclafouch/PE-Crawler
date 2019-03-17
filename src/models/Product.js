@@ -1,6 +1,6 @@
 export default (sequelize, type) =>
   sequelize.define(
-    'product',
+    'Product',
     {
       id: {
         type: type.INTEGER,

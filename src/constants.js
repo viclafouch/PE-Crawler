@@ -1,4 +1,5 @@
 export const baseUrl = new URL('https://support.google.com')
+export const limit = 10
 
 export const products = [
   {

@@ -1,71 +1,68 @@
-import { createFakeDatabase, pathFakeDatabase } from './utils'
 import { products } from '../build/constants'
-import { unlinkSync } from 'fs'
-
 const assert = require('assert').strict
 
-const database = createFakeDatabase()
-
-describe('Test Database', () => {
-  before(async () => {
-    await database.db.authenticate()
-    await database.db.sync({ force: true })
-    console.log('authentication with cleaning')
-  })
-
-  after(async () => {
-    await database.db.close()
-    unlinkSync(pathFakeDatabase)
-    console.log('close db and file removed')
-  })
-
-  afterEach(async () => {
-    await database.db.sync({ force: true })
-    console.log('clean database')
-  })
-
-  it('test add Product', async () => {
-    for (const product of products) {
-      await database.Product.create({
-        name: product.name,
-        baseUrl: product.url
-      })
-    }
-    const count = await database.Product.count()
-    assert.equal(count, products.length)
-  })
-
-  it('test add Card', async () => {
-    console.log('insert one product')
-    await database.Product.create({
-      name: 'Test Product',
-      baseUrl: 'https://support.google.com'
+describe('models', () => {
+  describe('models/index', () => {
+    it('returns the card model', () => {
+      const models = require('../build/models').default
+      assert.ok(models.Card)
     })
-    console.log('product added')
-    const product = await database.Product.findOne()
-    console.log('product found')
-    const datas = {
-      uuid: 7367023,
-      title: 'Tests et déploiements des fonctionnalités YouTube',
-      lang: 'fr',
-      url: product.baseUrl + '/' + 7367023
-    }
-    console.log('Create Card with productId 1')
-    await database.Card.create({
-      ...datas,
-      productId: product.id
+
+    it('returns the product model', function() {
+      var models = require('../build/models').default
+      assert.ok(models.Product)
     })
-    console.log('Find Card created')
-    const card = await database.Card.findOne({
-      where: {
-        uuid: datas.uuid
+  })
+
+  describe('insert/remove', () => {
+    const models = require('../build/models').default
+    beforeEach(async () => {
+      await models.sequelize.sync({ force: true })
+    })
+
+    it('test add Product', async () => {
+      for (const product of products) {
+        await models.Product.create({
+          name: product.name,
+          baseUrl: product.url
+        })
       }
+      const count = await models.Product.count()
+      assert.equal(count, products.length)
     })
-    assert.ok(card)
-    console.log('Card found')
-    assert.equal(card.title, datas.title)
-    assert.equal(card.url, datas.url)
-    assert.equal(card.productId, product.id)
-    console.log('Card is valide')
+
+    it('test add Card', async () => {
+      console.log('insert one product')
+      await models.Product.create({
+        name: 'Test Product',
+        baseUrl: 'https://support.google.com'
+      })
+      console.log('product added')
+      const product = await models.Product.findOne()
+      console.log('product found')
+      const datas = {
+        uuid: 7367023,
+        title: 'Tests et déploiements des fonctionnalités YouTube',
+        lang: 'fr',
+        url: product.baseUrl + '/' + 7367023
+      }
+      console.log('Create Card with productId 1')
+      await models.Card.create({
+        ...datas,
+        ProductId: product.id
+      })
+      console.log('Find Card created')
+      const card = await models.Card.findOne({
+        where: {
+          uuid: datas.uuid
+        }
+      })
+      assert.ok(card)
+      console.log('Card found')
+      assert.equal(card.title, datas.title)
+      assert.equal(card.url, datas.url)
+      assert.equal(card.ProductId, product.id)
+      console.log('Card is valide')
+    })
   })
 })
