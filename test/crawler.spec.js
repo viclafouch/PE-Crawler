@@ -1,4 +1,4 @@
-import { isValidProductUrl, getUuid } from '../build/crawler'
+import { isValidProductUrl, getUuid, crawloop } from '../build/crawler'
 import { baseUrl, products } from '../build/constants'
 import { actionCard } from '../build/crawler'
 
@@ -43,10 +43,11 @@ describe('crawler', function() {
       }
     })
 
-    beforeEach(function() {
+    beforeEach(async function() {
       this.models = require('../build/models').default
-      this.models.Card.sync({ force: true })
+      await this.models.Card.sync({ force: true })
     })
+
     it('actionCard', async function() {
       const options = { url: 'https://support.google.com/youtube/answer/2801939' }
       const result = { title: 'Test Product' }
@@ -109,6 +110,21 @@ describe('crawler', function() {
       })).length
       console.log('there is still 2 cards in total')
       assert.equal(cardsNumber, cardsNumber3)
+    })
+    it('crawler', async function() {
+      const maxRequest = 10
+      console.log('start crawler')
+      await crawloop(this.models, {
+        maxRequest
+      })
+      console.log('end crawler')
+      const cardCrawled = await this.models.Card.findAll()
+      console.log(cardCrawled.length + ' cards inserted')
+      for (const card of cardCrawled) {
+        assert.ok(card.title)
+        assert.ok(card.ProductId)
+        assert.ok(card.url)
+      }
     })
   })
 })

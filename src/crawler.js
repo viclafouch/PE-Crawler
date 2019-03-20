@@ -11,12 +11,6 @@ export const getUuid = url => {
   }
 }
 
-export const getContent = () => ({
-  title: $('h1')
-    .text()
-    .trim()
-})
-
 export const isValidProductUrl = (url, productUrl) => {
   try {
     const productUrlObject = new URL(productUrl)
@@ -72,7 +66,11 @@ const crawl = (models, product, params) =>
     maxConcurrency: 5,
     retryCount: 0,
     preRequest: options => isRequestValid({ options, product }),
-    evaluatePage: () => getContent(),
+    evaluatePage: () => ({
+      title: $('h1')
+        .text()
+        .trim()
+    }),
     onSuccess: async ({ result, options }) => actionCard({ result, options, models, product }),
     onError(error) {
       console.log(error)
@@ -95,7 +93,7 @@ export async function startCrawling(models, params) {
   }
 }
 
-async function crawloop(models, restartAfter = 86400000) {
+export async function crawloop(models, params, restartAfter = 86400000) {
   for (const product of products) {
     await models.Product.create({
       name: product.name,
@@ -105,7 +103,7 @@ async function crawloop(models, restartAfter = 86400000) {
   const looping = async () => {
     const start_crawling_at = new Date()
     const { Op } = models.Sequelize
-    await startCrawling(models)
+    await startCrawling(models, params)
     await models.Card.destroy({
       where: {
         updatedAt: {
@@ -113,10 +111,10 @@ async function crawloop(models, restartAfter = 86400000) {
         }
       }
     })
-    setTimeout(() => looping(), restartAfter)
+    if (process.env.NODE_ENV !== 'test') setTimeout(() => looping(), restartAfter)
   }
 
-  looping()
+  await looping()
 }
 
 export default crawloop
