@@ -95,9 +95,8 @@ export async function startCrawling(models, params) {
 
 export async function crawloop(models, params, restartAfter = 86400000) {
   for (const product of products) {
-    await models.Product.create({
-      name: product.name,
-      baseUrl: product.url
+    await models.Product.findOrCreate({
+      where: { name: product.name, baseUrl: product.url }
     })
   }
   const looping = async () => {
