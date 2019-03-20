@@ -4,7 +4,7 @@ import { actionCard } from '../build/crawler'
 
 const assert = require('assert').strict
 
-describe('crawler', function() {
+describe.only('crawler', function() {
   describe('helpers', () => {
     it('isValidProductUrl', () => {
       const productPathname = '/productName'
@@ -124,6 +124,10 @@ describe('crawler', function() {
         assert.ok(card.title)
         assert.ok(card.ProductId)
         assert.ok(card.url)
+        const product = await this.models.Product.findOne({
+          where: { id: card.ProductId }
+        })
+        assert.ok(isValidProductUrl(card.url, product.baseUrl))
       }
     })
   })
