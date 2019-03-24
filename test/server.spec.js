@@ -65,7 +65,7 @@ describe('server', function() {
   describe('card route', function() {
     it('route = /card', () => {
       return request(server)
-        .get('/cards')
+        .post('/cards')
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200)
@@ -77,9 +77,10 @@ describe('server', function() {
         })
     })
 
-    it('route = /card?productsId=1&page=1', () => {
+    it('route = /card - { productsId: [1], page: 1 }', () => {
       return request(server)
-        .get('/cards?productsId=1&page=1')
+        .post('/cards')
+        .send({ productsId: [1], page: 1 })
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200)
@@ -89,9 +90,10 @@ describe('server', function() {
         })
     })
 
-    it('route = /card?productsId=1&page=3', () => {
+    it('route = /card - { productsId: "1", page: 3 }', () => {
       return request(server)
-        .get('/cards?productsId=1&page=3')
+        .post('/cards')
+        .send({ productsId: '1', page: 3 })
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200)
@@ -102,14 +104,16 @@ describe('server', function() {
 
     it('pagination not [0-9]', async () => {
       const pages = ['a', '', 'é7', '° ', '%20']
-      for (const p of pages) {
+      for (const page of pages) {
         await request(server)
-          .get(`/cards?page=${p}`)
+          .post(`/cards`)
+          .send({ page })
+          .set('Accept', 'application/json')
           .expect(200)
       }
     })
 
-    it('route = /card?search=good', async function() {
+    it('route = /card - Good searches', async function() {
       const title = 'Good Card Title'
       const product = await this.Product.findOne()
       const card = await this.Card.create({
@@ -123,7 +127,8 @@ describe('server', function() {
 
       for (const search of searches) {
         await request(server)
-          .get(`/cards?search=${search}`)
+          .post(`/cards`)
+          .send({ search })
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
@@ -139,9 +144,10 @@ describe('server', function() {
       })
     })
 
-    it('route = /card?search=dksffdslflsdf', () => {
+    it('route = /card - { search: "dksffdslflsdf" }', () => {
       return request(server)
-        .get('/cards?search=dksffdslflsdf')
+        .post('/cards')
+        .send({ search: 'dksffdslflsdf' })
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200)

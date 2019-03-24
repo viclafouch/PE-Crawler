@@ -4,16 +4,16 @@ import models from '../../models'
 import { limit } from '../../constants'
 const router = express.Router()
 
-router.get('/cards', async (req, res) => {
-  let page = parseInt(req.query.page, 10)
+router.post('/cards', async (req, res) => {
+  let page = parseInt(req.body.page, 10)
   page = !isNaN(page) ? page : 1
   const where = {}
   // TODO CHANGE TO iLike for PG
-  if (req.query.search) where.title = { [Op.like]: `%${req.query.search}%` }
+  if (req.body.search) where.title = { [Op.like]: `%${req.body.search}%` }
 
-  if (req.query.productsId) {
+  if (req.body.productsId) {
     where.ProductId = {
-      [Op.in]: Array.isArray(req.query.productsId) ? req.query.productsId : [req.query.productsId]
+      [Op.in]: Array.isArray(req.body.productsId) ? req.body.productsId : [req.body.productsId]
     }
   }
   const { count } = await models.Card.findAndCountAll({ where })
