@@ -11,9 +11,9 @@ router.get('/cards', async (req, res) => {
   // TODO CHANGE TO iLike for PG
   if (req.query.search) where.title = { [Op.like]: `%${req.query.search}%` }
 
-  if (req.query.productsId && Array.isArray(req.query.productsId)) {
+  if (req.query.productsId) {
     where.ProductId = {
-      [Op.or]: req.query.productsId
+      [Op.in]: Array.isArray(req.query.productsId) ? req.query.productsId : [req.query.productsId]
     }
   }
   const { count } = await models.Card.findAndCountAll({ where })

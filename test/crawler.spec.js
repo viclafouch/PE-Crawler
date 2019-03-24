@@ -4,7 +4,7 @@ import { actionCard } from '../build/crawler'
 
 const assert = require('assert').strict
 
-describe.only('crawler', function() {
+describe('crawler', function() {
   describe('helpers', () => {
     it('isValidProductUrl', () => {
       const productPathname = '/productName'

@@ -54,7 +54,8 @@ describe('models', () => {
       console.log('Find Card created')
       const card = await models.Card.findOne({
         where: {
-          uuid: datas.uuid
+          uuid: datas.uuid,
+          ProductId: product.id
         }
       })
       assert.ok(card)

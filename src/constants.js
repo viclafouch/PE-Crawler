@@ -5,5 +5,9 @@ export const products = [
   {
     name: 'YouTube',
     url: baseUrl.origin + '/youtube'
+  },
+  {
+    name: 'Chrome',
+    url: baseUrl.origin + '/chrome'
   }
 ]
