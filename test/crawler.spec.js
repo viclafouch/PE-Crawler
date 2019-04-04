@@ -1,5 +1,5 @@
 import { isValidProductUrl, getUuid, crawloop } from '../build/crawler'
-import { baseUrl, products } from '../build/constants'
+import { baseUrl, products, languages } from '../build/constants'
 import { actionCard } from '../build/crawler'
 
 const assert = require('assert').strict
@@ -131,6 +131,21 @@ describe('crawler', function() {
           where: { id: card.ProductId }
         })
         assert.ok(isValidProductUrl(card.url, product.baseUrl))
+      }
+    })
+
+    it('crawler languages nb founded', async function() {
+      const maxRequest = 10
+      console.log('start crawler')
+      await crawloop(this.models, {
+        maxRequest
+      })
+
+      for (const lang of languages) {
+        const cards = await this.models.Card.findAll({
+          where: { lang }
+        })
+        console.log(`${cards.length} cards founded for ${lang} language`)
       }
     })
   })

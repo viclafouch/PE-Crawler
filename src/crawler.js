@@ -49,7 +49,7 @@ export const actionCard = async ({ options, result, product, models, lang }) => 
       lang,
       url: product.baseUrl + '/answer/' + uuid
     }
-    if (!(await models.Card.findOne({ where: { uuid } }))) {
+    if (!(await models.Card.findOne({ where: { uuid, lang } }))) {
       await models.Card.create({
         ...datas,
         ProductId: product.id
