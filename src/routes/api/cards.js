@@ -1,7 +1,7 @@
 import express from 'express'
 import { Op } from 'sequelize'
 import models from '../../models'
-import { limit } from '../../constants'
+import { limit, languages } from '../../constants'
 const router = express.Router()
 
 router.post('/cards', async (req, res) => {
@@ -10,7 +10,7 @@ router.post('/cards', async (req, res) => {
   const where = {}
   // TODO CHANGE TO iLike for PG
   if (req.body.search) where.title = { [Op.like]: `%${req.body.search}%` }
-
+  if (req.body.lang && languages.includes(req.body.lang)) where.lang = req.body.lang
   if (req.body.productsId) {
     where.ProductId = {
       [Op.in]: Array.isArray(req.body.productsId) ? req.body.productsId : [req.body.productsId]
@@ -20,7 +20,7 @@ router.post('/cards', async (req, res) => {
   const pages = Math.ceil(count / limit)
   const offset = limit * (page - 1)
   const cards = await models.Card.findAll({
-    attributes: ['title', 'url', 'uuid'],
+    attributes: ['title', 'url', 'uuid', 'description', 'lang'],
     limit,
     offset,
     where,

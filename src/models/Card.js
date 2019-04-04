@@ -13,6 +13,10 @@ export default (sequelize, type) => {
       type: type.STRING,
       allowNull: false
     },
+    description: {
+      type: type.STRING,
+      allowNull: true
+    },
     url: {
       type: type.STRING,
       allowNull: false,

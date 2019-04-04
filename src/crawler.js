@@ -1,4 +1,4 @@
-import { baseUrl, products } from './constants'
+import { baseUrl, products, languages } from './constants'
 const HCCrawler = require('headless-chrome-crawler')
 
 export const getUuid = url => {
@@ -23,20 +23,21 @@ export const isValidProductUrl = (url, productUrl) => {
   }
 }
 
-export const isRequestValid = ({ options, product }) => {
+export const isRequestValid = ({ options, product, lang }) => {
   if (isValidProductUrl(options.url, product.baseUrl)) {
     const url = new URL(options.url)
     url.hash = ''
     url.search = ''
+    url.searchParams.set('hl', lang)
     options.url = url.toString()
     return options
   }
   return false
 }
 
-export const actionCard = async ({ options, result, product, models }) => {
+export const actionCard = async ({ options, result, product, models, lang }) => {
   try {
-    const { title } = result
+    const { title, description } = result
     const { url } = options
     const uuid = getUuid(url)
     if (isNaN(uuid) || !url.includes('/answer/')) return
@@ -44,7 +45,8 @@ export const actionCard = async ({ options, result, product, models }) => {
     const datas = {
       uuid,
       title,
-      lang: 'fr',
+      description,
+      lang,
       url: product.baseUrl + '/answer/' + uuid
     }
     if (!(await models.Card.findOne({ where: { uuid } }))) {
@@ -52,26 +54,28 @@ export const actionCard = async ({ options, result, product, models }) => {
         ...datas,
         ProductId: product.id
       })
-    } else await models.Card.update({ title: datas.title }, { where: { uuid } })
+    } else await models.Card.update({ title: datas.title }, { where: { uuid, lang } })
   } catch (error) {
     console.log(error)
     return false
   }
 }
 
-const crawl = (models, product, params) =>
+const crawl = (models, product, lang, params) =>
   HCCrawler.launch({
     ...params,
     maxDepth: 10,
+    maxRequest: 30,
     maxConcurrency: 5,
     retryCount: 0,
-    preRequest: options => isRequestValid({ options, product }),
+    preRequest: options => isRequestValid({ options, product, lang }),
     evaluatePage: () => ({
       title: $('h1')
         .text()
-        .trim()
+        .trim(),
+      description: $('meta[name=description]').attr('content')
     }),
-    onSuccess: async ({ result, options }) => actionCard({ result, options, models, product }),
+    onSuccess: async ({ result, options }) => actionCard({ result, options, models, product, lang }),
     onError(error) {
       console.log(error)
     }
@@ -79,17 +83,19 @@ const crawl = (models, product, params) =>
 
 export async function startCrawling(models, params) {
   const products = await models.Product.findAll()
-  for (const product of products) {
-    const crawler = await crawl(models, product, params)
-    await crawler.queue({
-      maxDepth: 3,
-      url: product.baseUrl,
-      skipDuplicates: true,
-      skipRequestedRedirect: true,
-      allowedDomains: [baseUrl.hostname]
-    })
-    await crawler.onIdle()
-    await crawler.close()
+  for (const lang of languages) {
+    for (const product of products) {
+      const crawler = await crawl(models, product, lang, params)
+      await crawler.queue({
+        maxDepth: 3,
+        url: product.baseUrl,
+        skipDuplicates: true,
+        skipRequestedRedirect: true,
+        allowedDomains: [baseUrl.hostname]
+      })
+      await crawler.onIdle()
+      await crawler.close()
+    }
   }
 }
 

@@ -6,6 +6,7 @@ const assert = require('assert').strict
 const newFakeCard = product => ({
   uuid: 7367023,
   title: 'Tests et déploiements des fonctionnalités ' + product.name,
+  description: 'test Description',
   lang: 'fr',
   url: product.baseUrl + '/' + 7367023
 })

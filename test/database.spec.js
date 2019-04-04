@@ -43,6 +43,7 @@ describe('models', () => {
       const datas = {
         uuid: 7367023,
         title: 'Tests et déploiements des fonctionnalités YouTube',
+        description: 'test description',
         lang: 'fr',
         url: product.baseUrl + '/' + 7367023
       }
@@ -61,6 +62,7 @@ describe('models', () => {
       assert.ok(card)
       console.log('Card found')
       assert.equal(card.title, datas.title)
+      assert.equal(card.description, datas.description)
       assert.equal(card.url, datas.url)
       assert.equal(card.ProductId, product.id)
       console.log('Card is valide')

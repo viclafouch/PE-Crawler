@@ -49,25 +49,27 @@ describe('crawler', function() {
     })
 
     it('actionCard', async function() {
+      const lang = 'en'
       const options = { url: 'https://support.google.com/youtube/answer/2801939' }
-      const result = { title: 'Test Product' }
+      const result = { title: 'Test Product', description: 'Test description' }
       console.log('get product YouTube')
       const product = await this.models.Product.findOne({ where: { name: 'YouTube' } })
       console.log('test actionCard insert valid')
-      await actionCard({ options, result, product, models: this.models })
+      await actionCard({ options, result, product, models: this.models, lang })
       console.log('get last card created')
       const createdCard = await this.models.Card.findOne({
         order: [['createdAt', 'DESC']],
-        where: { ProductId: product.id }
+        where: { ProductId: product.id, lang }
       })
       assert.ok(createdCard)
       console.log('last card has been created')
       assert.equal(createdCard.title, result.title)
       console.log('title inserted is valid')
+      assert.equal(createdCard.description, result.description)
+      console.log('description inserted is valid')
       result.title = 'Test Product edited'
       console.log('test actionCard update existing card')
-      await actionCard({ options, result, product, models: this.models })
-
+      await actionCard({ options, result, product, models: this.models, lang })
       console.log('get last card updated')
       const updatedCard = await this.models.Card.findOne({
         order: [['updatedAt', 'DESC']],
@@ -84,33 +86,34 @@ describe('crawler', function() {
       options.url = 'https://support.google.com/youtube/answer/2801936'
       result.title = 'New Card'
       console.log('test actionCard add new card')
-      await actionCard({ options, result, product, models: this.models })
+      await actionCard({ options, result, product, models: this.models, lang })
       console.log('get all youtube card')
       const cardsNumber = (await this.models.Card.findAll({
-        where: { ProductId: product.id }
+        where: { ProductId: product.id, lang }
       })).length
       console.log('there is 2 cards in total')
       assert.equal(cardsNumber, 2)
 
       options.url = 'https://support.google.com/youtube/topic/myTopic'
       console.log('test actionCard add new card with topic')
-      await actionCard({ options, result, product, models: this.models })
+      await actionCard({ options, result, product, models: this.models, lang })
       console.log('get all youtube card')
       const cardsNumber2 = (await this.models.Card.findAll({
-        where: { ProductId: product.id }
+        where: { ProductId: product.id, lang }
       })).length
       console.log('there is still 2 cards in total')
       assert.equal(cardsNumber, cardsNumber2)
       console.log('test actionCard add new card with baseUrl')
       options.url = product.baseUrl
-      await actionCard({ options, result, product, models: this.models })
+      await actionCard({ options, result, product, models: this.models, lang })
       console.log('get all youtube card')
       const cardsNumber3 = (await this.models.Card.findAll({
-        where: { ProductId: product.id }
+        where: { ProductId: product.id, lang }
       })).length
       console.log('there is still 2 cards in total')
       assert.equal(cardsNumber, cardsNumber3)
     })
+
     it('crawler', async function() {
       const maxRequest = 10
       console.log('start crawler')
