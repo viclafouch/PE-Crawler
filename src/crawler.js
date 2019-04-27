@@ -86,24 +86,24 @@ const collectContent = () => {
   }
 }
 
-export async function startCrawling(models) {
+export async function startCrawling(models, options) {
   const products = await models.Product.findAll()
   for (const lang of languages) {
     for (const product of products) {
       await crawlsite({
         url: product.baseUrl,
-        maxRequest: 2,
         sameOrigin: true,
         skipStrictDuplicates: true,
         preRequest: url => isRequestValid({ url, product, lang }),
         evaluatePage: collectContent,
-        onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product })
+        onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product }),
+        ...options
       })
     }
   }
 }
 
-export async function crawloop(models, restartAfter = 86400000) {
+export async function crawloop(models, options, restartAfter = 86400000) {
   for (const product of products) {
     await models.Product.findOrCreate({
       where: { name: product.name, baseUrl: product.url }
@@ -113,7 +113,7 @@ export async function crawloop(models, restartAfter = 86400000) {
     const start_crawling_at = new Date()
     debug(`Start crawling at ${start_crawling_at}`)
     const { Op } = models.Sequelize
-    await startCrawling(models)
+    await startCrawling(models, options)
     const finished_crawling_at = new Date()
     debug(`Finish crawling at ${start_crawling_at}`)
     debug(`Crawling finished after ${(finished_crawling_at - start_crawling_at) / 1000} seconds`)
