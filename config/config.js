@@ -4,7 +4,8 @@ module.exports = {
     host: 'localhost',
     operatorsAliases: false,
     sync: { force: true },
-    storage: './db.development.sqlite'
+    storage: './db.development.sqlite',
+    logging: false
   },
   test: {
     dialect: 'sqlite',

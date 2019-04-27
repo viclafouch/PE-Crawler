@@ -1,5 +1,6 @@
-import { baseUrl, products, languages } from './constants'
-const HCCrawler = require('headless-chrome-crawler')
+import { products, languages } from './constants'
+import crawlsite from './crawlsite'
+import { debug } from './utils/utils'
 
 export const getUuid = url => {
   try {
@@ -23,22 +24,21 @@ export const isValidProductUrl = (url, productUrl) => {
   }
 }
 
-export const isRequestValid = ({ options, product, lang }) => {
-  if (isValidProductUrl(options.url, product.baseUrl)) {
-    const url = new URL(options.url)
+export const isRequestValid = ({ url, product, lang }) => {
+  if (isValidProductUrl(url, product.baseUrl)) {
+    url = new URL(url)
     url.hash = ''
     url.search = ''
     url.searchParams.set('hl', lang)
-    options.url = url.toString()
-    return options
+    url = url.toString()
+    return url
   }
   return false
 }
 
-export const actionCard = async ({ options, result, product, models, lang }) => {
+export const addOrUpdateCards = async ({ url, result, product, models, lang }) => {
   try {
     const { title, description } = result
-    const { url } = options
     const uuid = getUuid(url)
     if (isNaN(uuid) || !url.includes('/answer/')) return
 
@@ -49,57 +49,61 @@ export const actionCard = async ({ options, result, product, models, lang }) => 
       lang,
       url: product.baseUrl + '/answer/' + uuid
     }
-    if (!(await models.Card.findOne({ where: { uuid, lang } }))) {
+
+    if (!(await models.Card.findOne({ where: { uuid, lang, ProductId: product.id } }))) {
       await models.Card.create({
         ...datas,
         ProductId: product.id
       })
-    } else await models.Card.update({ title: datas.title }, { where: { uuid, lang } })
+    } else {
+      await models.Card.update(
+        {
+          title: datas.title,
+          description: datas.description
+        },
+        {
+          where: {
+            uuid,
+            lang,
+            ProductId: product.id
+          }
+        }
+      )
+    }
+    return true
   } catch (error) {
-    console.log(error)
+    console.error(error)
     return false
   }
 }
 
-const crawl = (models, product, lang, params) =>
-  HCCrawler.launch({
-    ...params,
-    maxDepth: 10,
-    maxRequest: 30,
-    maxConcurrency: 5,
-    retryCount: 0,
-    preRequest: options => isRequestValid({ options, product, lang }),
-    evaluatePage: () => ({
-      title: $('h1')
-        .text()
-        .trim(),
-      description: $('meta[name=description]').attr('content')
-    }),
-    onSuccess: async ({ result, options }) => actionCard({ result, options, models, product, lang }),
-    onError(error) {
-      console.log(error)
-    }
-  })
+const collectContent = () => {
+  const titleNode = document.querySelector('h1')
+  const description = document.querySelector('meta[name=description]')
+  return {
+    title: titleNode ? titleNode.textContent.trim() : null,
+    description: description ? description.getAttribute('content') : null
+  }
+}
 
-export async function startCrawling(models, params) {
+export async function startCrawling(models) {
   const products = await models.Product.findAll()
   for (const lang of languages) {
     for (const product of products) {
-      const crawler = await crawl(models, product, lang, params)
-      await crawler.queue({
-        maxDepth: 3,
+      await crawlsite({
         url: product.baseUrl,
-        skipDuplicates: true,
-        skipRequestedRedirect: true,
-        allowedDomains: [baseUrl.hostname]
+        maxRequest: 2,
+        sameOrigin: true,
+        skipStrictDuplicates: true,
+        preRequest: url => isRequestValid({ url, product, lang }),
+        evaluatePage: collectContent,
+        onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product })
       })
-      await crawler.onIdle()
-      await crawler.close()
     }
   }
 }
 
-export async function crawloop(models, params, restartAfter = 86400000) {
+export async function crawloop(models, restartAfter = 86400000) {
   for (const product of products) {
     await models.Product.findOrCreate({
       where: { name: product.name, baseUrl: product.url }
@@ -107,8 +111,12 @@ export async function crawloop(models, params, restartAfter = 86400000) {
   }
   const looping = async () => {
     const start_crawling_at = new Date()
+    debug(`Start crawling at ${start_crawling_at}`)
     const { Op } = models.Sequelize
-    await startCrawling(models, params)
+    await startCrawling(models)
+    const finished_crawling_at = new Date()
+    debug(`Finish crawling at ${start_crawling_at}`)
+    debug(`Crawling finished after ${(finished_crawling_at - start_crawling_at) / 1000} seconds`)
     await models.Card.destroy({
       where: {
         updatedAt: {
