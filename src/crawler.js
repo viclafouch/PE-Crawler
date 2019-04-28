@@ -1,5 +1,5 @@
 import { products, languages } from './constants'
-import crawlsite from './crawlsite'
+import Crawler from './crawlsite'
 import { debug } from './utils/utils'
 
 export const getUuid = url => {
@@ -90,7 +90,7 @@ export async function startCrawling(models, options) {
   const products = await models.Product.findAll()
   for (const lang of languages) {
     for (const product of products) {
-      await crawlsite({
+      await Crawler.launch({
         url: product.baseUrl,
         sameOrigin: true,
         skipStrictDuplicates: true,

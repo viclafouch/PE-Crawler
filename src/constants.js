@@ -8,4 +8,4 @@ export const products = [
   }
 ]
 
-export const languages = ['fr', 'en', 'de', 'pt', 'es']
+export const languages = ['fr']

@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "cross-env NODE_ENV=test ./node_modules/.bin/mocha -timeout 1000000 --reporter spec testBuild/*.spec.js",
-    "start": "cross-env DEBUG=express-sequelize NODE_ENV=development node ./bin/www",
+    "start": "lsof -ti:3000 | xargs kill && cross-env DEBUG=express-sequelize NODE_ENV=development node ./bin/www",
     "prestart": "cm build",
     "pretest": "cm build && cm build-test",
     "lint": "eslint .",
