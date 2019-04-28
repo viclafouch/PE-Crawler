@@ -11,7 +11,9 @@
     "test": "cross-env NODE_ENV=test ./node_modules/.bin/mocha -timeout 1000000 --reporter spec testBuild/*.spec.js",
     "start": "cross-env DEBUG=express-sequelize NODE_ENV=development node ./bin/www",
     "prestart": "cm build",
-    "pretest": "cm build && cm build-test"
+    "pretest": "cm build && cm build-test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "author": "",
   "license": "ISC",
@@ -28,19 +30,22 @@
     "sequelize-cli": "^5.4.0",
     "sqlite3": "^4.0.6"
   },
-  "prettier": {
-    "tabWidth": 2,
-    "semi": false,
-    "printWidth": 140,
-    "singleQuote": true
-  },
   "devDependencies": {
     "@babel/core": "^7.4.3",
     "@babel/preset-env": "^7.4.3",
     "centimaitre": "^1.0.3",
     "cross-env": "^5.2.0",
+    "eslint": "^5.16.0",
+    "eslint-config-prettier": "^4.2.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-node": "^8.0.1",
+    "eslint-plugin-prettier": "^3.0.1",
+    "eslint-plugin-promise": "^4.1.1",
+    "eslint-plugin-standard": "^4.0.0",
     "fs-jetpack": "^2.2.2",
     "mocha": "^6.1.4",
+    "prettier": "^1.17.0",
     "supertest": "^4.0.2"
   }
 }

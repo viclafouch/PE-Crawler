@@ -1,3 +1,5 @@
+/* global describe, it, beforeEach */
+
 import { products } from '../build/constants'
 const assert = require('assert').strict
 

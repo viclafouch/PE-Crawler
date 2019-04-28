@@ -1,6 +1,7 @@
-import { isValidProductUrl, getUuid, crawloop } from '../build/crawler'
+/* global describe, it, before, beforeEach */
+
+import { isValidProductUrl, getUuid, crawloop, addOrUpdateCards } from '../build/crawler'
 import { baseUrl, products, languages } from '../build/constants'
-import { addOrUpdateCards } from '../build/crawler'
 
 const assert = require('assert').strict
 

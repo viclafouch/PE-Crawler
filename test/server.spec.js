@@ -1,3 +1,5 @@
+/* global describe, it, before, beforeEach, after */
+
 import app from '../build/server'
 import request from 'supertest'
 import { products, limit } from '../build/constants'
@@ -23,12 +25,12 @@ describe('server', function() {
         name: product.name,
         baseUrl: product.url
       })
-      for (const i of new Array(cardByProduct)) {
+      new Array(cardByProduct).forEach(async () => {
         await Card.create({
           ...newFakeCard(product),
           ProductId: product.id
         })
-      }
+      })
     }
     server = await app.listen()
   })

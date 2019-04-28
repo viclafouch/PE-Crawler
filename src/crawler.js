@@ -110,17 +110,17 @@ export async function crawloop(models, options, restartAfter = 86400000) {
     })
   }
   const looping = async () => {
-    const start_crawling_at = new Date()
-    debug(`Start crawling at ${start_crawling_at}`)
+    const startCrawlingAt = new Date()
+    debug(`Start crawling at ${startCrawlingAt}`)
     const { Op } = models.Sequelize
     await startCrawling(models, options)
-    const finished_crawling_at = new Date()
-    debug(`Finish crawling at ${start_crawling_at}`)
-    debug(`Crawling finished after ${(finished_crawling_at - start_crawling_at) / 1000} seconds`)
+    const finishedCrawlingAt = new Date()
+    debug(`Finish crawling at ${startCrawlingAt}`)
+    debug(`Crawling finished after ${(finishedCrawlingAt - startCrawlingAt) / 1000} seconds`)
     await models.Card.destroy({
       where: {
         updatedAt: {
-          [Op.lt]: start_crawling_at
+          [Op.lt]: startCrawlingAt
         }
       }
     })

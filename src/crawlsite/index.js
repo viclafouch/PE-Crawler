@@ -12,10 +12,13 @@ const collectAnchors = () => {
   const nodes = document.querySelectorAll('*')
   nodes.forEach(element => allElements.push(element))
 
-  return allElements
-    .filter(el => el.tagName === 'A' && el.href) // Only <a />
-    .filter(el => el.href !== location.href) // Don't need the actual href
-    .map(a => a.href)
+  return (
+    allElements
+      .filter(el => el.tagName === 'A' && el.href) // Only <a />
+      // eslint-disable-next-line no-undef
+      .filter(el => el.href !== location.href) // Don't need the actual href
+      .map(a => a.href)
+  )
 }
 
 /**
