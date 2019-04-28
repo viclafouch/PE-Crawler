@@ -1,5 +1,4 @@
 import puppeteer from 'puppeteer'
-import { TimeoutError } from 'puppeteer/Errors'
 import { debug } from '../utils/utils'
 
 /**
@@ -73,11 +72,7 @@ export default async options => {
       await newPage.close()
       for (const anchor of anchors) await crawl(browser, anchor)
     } catch (error) {
-      if (error instanceof TimeoutError) {
-        console.log('Error timeout 30s')
-      } else {
-        console.error(error)
-      }
+      console.error(error)
       await newPage.close()
     }
   }
