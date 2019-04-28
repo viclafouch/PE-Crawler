@@ -70,6 +70,9 @@ export const addOrUpdateCards = async ({ url, result, product, models, lang }) =
         }
       )
     }
+
+    const t = await models.Card.findAll()
+    console.log(`${t.length} cards saved`)
     return true
   } catch (error) {
     console.error(error)

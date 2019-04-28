@@ -10,6 +10,7 @@ class Crawler {
         maxRequest: -1,
         skipStrictDuplicates: true,
         sameOrigin: true,
+        maxDepth: 3,
         parallel: 5
       },
       options
@@ -68,14 +69,21 @@ class Crawler {
 
     if (!this.hostdomain) return
     const links = await this.crawl(this._options.url)
+    this.linksCrawled.set(this._options.url, 0)
     this._requestedCount++
     this.waitForQueue(links)
     await this.pull()
+    await this.finish()
   }
 
-  waitForQueue(urlCollected) {
+  async finish() {
+    await this._browser.close()
+  }
+
+  waitForQueue(urlCollected, depth = 0) {
     for (const url of urlCollected) {
-      if (!this.linksToCrawl.has(url) && !this.linksCrawled.has(url)) this.linksToCrawl.set(url)
+      if (!this.linksToCrawl.has(url) && !this.linksCrawled.has(url) && depth <= this._options.maxDepth)
+        this.linksToCrawl.set(url, depth)
     }
   }
 
@@ -88,11 +96,13 @@ class Crawler {
       for (let index = 0; index < this._options.parallel; index++) {
         if (this.linksToCrawl.size > 0 && this.checkMaxRequest()) {
           const link = this.linksToCrawl.keys().next().value
+          const currentDepth = this.linksToCrawl.get(link)
           let customLink = link
 
           if (this._actions.preRequest && this._actions.preRequest instanceof Function) {
             customLink = this._actions.preRequest(link)
             if (!customLink) {
+              this.linksCrawled.set(link)
               this.linksToCrawl.delete(link)
               continue
             }
@@ -103,6 +113,8 @@ class Crawler {
             continue
           }
 
+          console.log(currentDepth)
+
           this._requestedCount++
           this.linksToCrawl.delete(link)
           this.linksCrawled.set(link)
@@ -110,20 +122,21 @@ class Crawler {
           promises.push(
             new Promise(async resolve => {
               const linksCollected = await this.crawl(customLink)
-              resolve({ location: link, linksCollected })
+              resolve({ location: link, linksCollected, currentDepth })
             })
           )
         }
       }
 
       let response = await Promise.all(promises)
-      const allLinksCollected = [...new Set(response.map(e => e.linksCollected).flat())]
-      const linksJustCrawled = response.map(e => e.location)
-      debug(`${linksJustCrawled.length} link(s) just scraped`)
+      for (const res of response) {
+        this.waitForQueue(res.linksCollected, res.currentDepth + 1)
+      }
+
+      debug(`${response.length} link(s) just scraped`)
       debug(`${this.linksCrawled.size} total links crawled`)
       debug(`${this.linksToCrawl.size} total links to crawl`)
-      this.waitForQueue(allLinksCollected)
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await new Promise(resolve => setTimeout(resolve, 300))
       if (this.linksToCrawl.size > 0) await this.pull()
     } catch (error) {
       console.error(error)
@@ -150,6 +163,7 @@ class Crawler {
         console.error('Please try/catch your onSuccess function')
       }
     }
+    await page.close()
     return links
   }
 
