@@ -27,31 +27,79 @@ class Crawler {
     }
   }
 
+  /**
+   * Get all links from the page except the actual location
+   * @param {!Page} page
+   * @return {!Promise<Array<string>>}
+   */
   collectAnchors(page) {
-    return page.evaluate(
-      args => {
-        const allElements = []
+    return page.evaluate(() => {
+      const allElements = []
 
-        const nodes = document.querySelectorAll('*')
-        nodes.forEach(element => allElements.push(element))
+      const nodes = document.querySelectorAll('*')
+      nodes.forEach(element => allElements.push(element))
 
-        const links = allElements
-          .filter(el => el.tagName === 'A' && el.href) // Only <a />
-          // eslint-disable-next-line no-undef
-          .filter(el => el.href !== location.href) // Don't need the actual href
-          .filter(el => {
-            if (args.sameOrigin) return new URL(el).origin === args.hostname
-            return true
-          })
-          .map(a => a.href)
+      const links = allElements
+        .filter(el => el.tagName === 'A' && el.href) // Only <a />
+        // eslint-disable-next-line no-undef
+        .filter(el => el.href !== location.href) // Don't need the actual href
+        .map(a => a.href)
 
-        return [...new Set(links)]
-      },
-      { hostname: this.hostdomain, sameOrigin: this._options.sameOrigin }
-    )
+      return [...new Set(links)]
+    })
   }
 
-  async scrape(page) {
+  /**
+   * Check if link can be crawled (Same origin ? Already collected ? preRequest !false ?)
+   * @param {!string} link
+   * @return {!Promise<Boolean>}
+   */
+  async skipRequest(link) {
+    const allowOrigin = this.checkSameOrigin(link)
+    if (!allowOrigin) return true
+    if (this._options.skipStrictDuplicates && this.linkAlreadyCollected(link)) return true
+    const shouldRequest = await this.shouldRequest(link)
+    if (!shouldRequest) return true
+    return false
+  }
+
+  /**
+   * If preRequest is provided by the user, get new link or false
+   * @param {!string} link
+   * @return {!Promise<String || Boolean>}
+   */
+  async shouldRequest(link) {
+    if (this._actions.preRequest && this._actions.preRequest instanceof Function) {
+      try {
+        const preRequest = await this._actions.preRequest(link)
+        if (typeof preRequest === 'string' || !!preRequest === preRequest) {
+          return preRequest
+        }
+        throw new Error('preRequest function must return a string or false')
+      } catch (error) {
+        console.error('Please try/catch your preRequest function')
+        console.log(error.message)
+      }
+    }
+    return link
+  }
+
+  /**
+   * Check if link has the same origin as the host link
+   * @param {!String} url
+   * @return {!Boolean}
+   */
+  checkSameOrigin(url) {
+    if (this._options.sameOrigin) return new URL(url).origin === this.hostdomain
+    return true
+  }
+
+  /**
+   * If evaluatePage is provided by the user, await for it
+   * @param {!Page} page
+   * @return {!Promise<any>}
+   */
+  async evaluate(page) {
     let result = null
     if (this._actions.evaluatePage && this._actions.evaluatePage instanceof Function) {
       result = await page.evaluate(this._actions.evaluatePage)
@@ -59,6 +107,10 @@ class Crawler {
     return result
   }
 
+  /**
+   * Init the app. Begin with the first link, and start the pulling
+   * @return {!Promise<pending>}
+   */
   async init() {
     try {
       const link = new URL(this._options.url)
@@ -68,22 +120,32 @@ class Crawler {
     }
 
     if (!this.hostdomain) return
-    const links = await this.crawl(this._options.url)
+    const { linksCollected } = await this.scrapePage(this._options.url)
     this.linksCrawled.set(this._options.url, 0)
     this._requestedCount++
-    this.waitForQueue(links)
-    await this.pull()
-    await this.finish()
+    await this.addToQueue(linksCollected, 1)
+    await this.followLinks()
   }
 
-  async finish() {
-    await this._browser.close()
+  /**
+   * Start pulling links if there are any
+   * @return {!Promise<pending>}
+   */
+  followLinks() {
+    if (this.linksToCrawl.size > 0) return this.pull()
   }
 
-  waitForQueue(urlCollected, depth = 0) {
+  /**
+   * Add links collected to queue
+   * @param {!Array<string>} urlCollected
+   * @param {!Number} depth
+   * @return {!Promise<pending>}
+   */
+  async addToQueue(urlCollected, depth = 0) {
     for (const url of urlCollected) {
-      if (!this.linksToCrawl.has(url) && !this.linksCrawled.has(url) && depth <= this._options.maxDepth)
-        this.linksToCrawl.set(url, depth)
+      if (depth <= this._options.maxDepth && !(await this.skipRequest(url))) {
+        this.linksToCrawl.set(await this.shouldRequest(url), depth)
+      }
     }
   }
 
@@ -93,155 +155,107 @@ class Crawler {
         throw new Error('parallel option must be between 1 and 7')
       }
       const promises = []
+      let canRequested = true
       for (let index = 0; index < this._options.parallel; index++) {
-        if (this.linksToCrawl.size > 0 && this.checkMaxRequest()) {
-          const link = this.linksToCrawl.keys().next().value
-          const currentDepth = this.linksToCrawl.get(link)
-          let customLink = link
+        canRequested = this.checkMaxRequest()
+        if (!canRequested || this.linksToCrawl.size === 0) break
 
-          if (this._actions.preRequest && this._actions.preRequest instanceof Function) {
-            customLink = this._actions.preRequest(link)
-            if (!customLink) {
-              this.linksCrawled.set(link)
-              this.linksToCrawl.delete(link)
-              continue
-            }
-          }
+        const currentLink = this.linksToCrawl.keys().next().value
+        const currentDepth = this.linksToCrawl.get(currentLink)
 
-          if (this.checkAlreadyCrawl(customLink)) {
-            this.linksToCrawl.delete(link)
-            continue
-          }
+        this._requestedCount++
+        this.linksToCrawl.delete(currentLink)
+        this.linksCrawled.set(currentLink)
 
-          console.log(currentDepth)
-
-          this._requestedCount++
-          this.linksToCrawl.delete(link)
-          this.linksCrawled.set(link)
-
-          promises.push(
-            new Promise(async resolve => {
-              const linksCollected = await this.crawl(customLink)
-              resolve({ location: link, linksCollected, currentDepth })
+        promises.push(
+          new Promise(resolve =>
+            this.scrapePage(currentLink).then(async ({ result, linksCollected }) => {
+              await this.scrapeSucceed({ urlScraped: currentLink, result })
+              return resolve({
+                location: currentLink,
+                linksCollected,
+                currentDepth
+              })
             })
           )
-        }
+        )
       }
 
-      let response = await Promise.all(promises)
+      const response = await Promise.all(promises)
       for (const res of response) {
-        this.waitForQueue(res.linksCollected, res.currentDepth + 1)
+        await this.addToQueue(res.linksCollected, res.currentDepth + 1)
       }
 
       debug(`${response.length} link(s) just scraped`)
       debug(`${this.linksCrawled.size} total links crawled`)
       debug(`${this.linksToCrawl.size} total links to crawl`)
       await new Promise(resolve => setTimeout(resolve, 300))
-      if (this.linksToCrawl.size > 0) await this.pull()
+      if (canRequested) return this.followLinks()
     } catch (error) {
       console.error(error)
     }
   }
 
-  checkAlreadyCrawl(url) {
-    return this.linksCrawled.has(url)
+  /**
+   * Get if a link will be crawled or has already been crawled.
+   * @param {!String} url
+   * @return {!Boolean}
+   */
+  linkAlreadyCollected(url) {
+    return this.linksCrawled.has(url) || this.linksToCrawl.has(url)
   }
 
+  /**
+   * Know if we have exceeded the number of request max provided in the options.
+   * @return {!Boolean}
+   */
   checkMaxRequest() {
     if (this._options.maxRequest === -1) return true
     return this._requestedCount <= this._options.maxRequest
   }
 
-  async crawl(url) {
-    const page = await this._browser.newPage()
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
-    const [result, links] = await Promise.all([this.scrape(page), this.collectAnchors(page)])
+  /**
+   * If onSuccess action's has been provided, await for it.
+   * @param {!Object<{urlScraped: string, result}>}
+   * @return {!Promise<pending>}
+   */
+  async scrapeSucceed({ urlScraped, result }) {
     if (this._actions.onSuccess && this._actions.onSuccess instanceof Function) {
       try {
-        await this._actions.onSuccess({ result, url })
+        await this._actions.onSuccess({ result, url: urlScraped })
       } catch (error) {
         console.error('Please try/catch your onSuccess function')
       }
     }
-    await page.close()
-    return links
   }
 
+  /**
+   * Scrap a page, evaluate and get new links to visit.
+   * @param {!String} url
+   * @return {Promise<{linksCollected: array, result, url: string}>}
+   */
+  async scrapePage(url) {
+    const page = await this._browser.newPage()
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    const [result, linksCollected] = await Promise.all([this.evaluate(page), this.collectAnchors(page)])
+    await page.close()
+    return { linksCollected, result, url }
+  }
+
+  /**
+   * Starting the crawl.
+   * @param {!0bject} options
+   * @return {Promise<{startCrawlingAt: date, finishCrawlingAt: date, linksVisited: array}>}
+   */
   static async launch(options) {
+    const startCrawlingAt = new Date()
     const browser = await puppeteer.launch()
     const crawler = new Crawler(browser, options)
     await crawler.init()
+    const finishCrawlingAt = new Date()
+    await crawler._browser.close()
+    return { startCrawlingAt, finishCrawlingAt, linksVisited: crawler.linksCrawled.size }
   }
 }
 
 export default Crawler
-
-// /**
-//  * Finds all anchors on the page
-//  * Note: Intended to be run in the context of the page.
-//  * @return {!Array<string>} List of anchor hrefs.
-//  */
-
-// /**
-//  * Start crawling using options provided
-//  * Note: Can be long, take a coffee depending on your options.
-//  * @param {object} options All of the option for the crawler.
-//  * @param {string} options.url Required. The url to start the crawler.
-//  * @param {function} options.preRequest Optional. When false, abort. Or, continue with the result.
-//  * @param {function} options.evaluatePage Optional. Get specific content of what you want on the page.
-//  * @param {boolean} options.skipStrictDuplicates Optional. When true, skip duplicate url already crawled.
-//  * @param {number} options.maxRequest Default -1. Specific a maximum number of page crawled.
-//  * @param {function} options.onSuccess Optional. After getting the evaluatePage result, do something.
-//  * @param {boolean} options.sameOrigin Default true. Only crawl on the same origin as the option.url
-//  */
-// export default async options => {
-//   options.maxRequest = !isNaN(options.maxRequest) ? options.maxRequest : -1
-//   options.skipStrictDuplicates = typeof options.skipStrictDuplicates === 'boolean' ? options.skipStrictDuplicates : true
-//   options.sameOrigin = typeof options.sameOrigin === 'boolean' ? options.sameOrigin : true
-
-//   const crawledPages = new Map()
-
-//   const crawl = async (browser, url) => {
-//     const { preRequest, evaluatePage, skipStrictDuplicates, onSuccess, maxRequest, sameOrigin } = options
-//     if (preRequest && preRequest instanceof Function) {
-//       url = preRequest(url)
-//       if (!url) return
-//     }
-
-//     if (!!skipStrictDuplicates && crawledPages.has(url)) return
-//     else if (maxRequest !== -1 && crawledPages.size === maxRequest) return
-//     else crawledPages.set(url)
-
-//     const newPage = await browser.newPage()
-
-//     try {
-//       await newPage.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
-//       let result
-//       if (evaluatePage && evaluatePage instanceof Function) {
-//         result = (await newPage.evaluate(evaluatePage)) || {}
-//         if (typeof result !== 'object') throw new Error('evaluatePage must return an object')
-//       } else {
-//         result = {}
-//       }
-
-//       if (onSuccess && onSuccess instanceof Function) await onSuccess({ result, url })
-
-//       debug(`${result.title} - added !`)
-
-//       const anchors = (await newPage.evaluate(collectAnchors)).filter(l => {
-//         if (sameOrigin) return new URL(l).origin === new URL(url).origin
-//         return true
-//       })
-
-//       await newPage.close()
-//       for (const anchor of anchors) await crawl(browser, anchor)
-//     } catch (error) {
-//       console.error(error)
-//       await newPage.close()
-//     }
-//   }
-
-//   const browser = await puppeteer.launch()
-//   await crawl(browser, options.url)
-//   await browser.close()
-// }
