@@ -1,4 +1,4 @@
-import { debug, retryRequest } from '../utils/utils'
+import { retryRequest, debug } from '../utils/utils'
 import fetch from 'node-fetch'
 import cheerio from 'cheerio'
 
@@ -11,7 +11,7 @@ class Crawler {
         skipStrictDuplicates: true,
         sameOrigin: true,
         maxDepth: 3,
-        parallel: 50
+        parallel: 5
       },
       options
     )
@@ -128,15 +128,7 @@ class Crawler {
     this.linksCrawled.set(sanitizedUrl, 0)
     this._requestedCount++
     await this.addToQueue(linksCollected, 1)
-    await this.followLinks()
-  }
-
-  /**
-   * Start pulling links if there are any
-   * @return {!Promise<pending>}
-   */
-  followLinks() {
-    if (this.linksToCrawl.size > 0) return this.pull()
+    if (this.linksToCrawl.size > 0) return this.crawl()
   }
 
   /**
@@ -153,45 +145,42 @@ class Crawler {
     }
   }
 
-  async pull() {
-    try {
-      const promises = []
-      let canRequested = true
-      for (let index = 0; index < this._options.parallel; index++) {
-        canRequested = this.checkMaxRequest()
-        if (!canRequested || this.linksToCrawl.size === 0) break
-
-        const currentLink = this.linksToCrawl.keys().next().value
-        const currentDepth = this.linksToCrawl.get(currentLink)
-
-        this._requestedCount++
-        this.linksToCrawl.delete(currentLink)
-        this.linksCrawled.set(currentLink)
-
-        promises.push(
-          new Promise(resolve =>
-            this.scrapePage(currentLink).then(async ({ result, linksCollected }) => {
-              await this.scrapeSucceed({ urlScraped: currentLink, result })
-              return resolve({
-                location: currentLink,
-                linksCollected,
-                currentDepth
-              })
+  crawl() {
+    return new Promise((resolve, reject) => {
+      let canceled = false
+      let currentCrawlers = 0
+      const pullQueue = () => {
+        if (canceled) return
+        while (currentCrawlers < this._options.parallel && this.linksToCrawl.size > 0) {
+          currentCrawlers++
+          const currentLink = this.linksToCrawl.keys().next().value
+          const currentDepth = this.linksToCrawl.get(currentLink)
+          this.linksToCrawl.delete(currentLink)
+          this.linksCrawled.set(currentLink)
+          debug(`crawling - ${currentLink}`)
+          debug(`crawing in parallel - ${currentLink}`)
+          debug(`Links to crawl - ${this.linksToCrawl.size}`)
+          this.pull(currentLink, currentDepth)
+            .then(() => {
+              currentCrawlers--
+              if (currentCrawlers === 0 && this.linksToCrawl.size === 0) resolve()
+              else pullQueue()
             })
-          )
-        )
+            .catch(error => {
+              canceled = true
+              reject(error)
+            })
+        }
       }
+      pullQueue()
+    })
+  }
 
-      const response = await Promise.all(promises)
-      for (const res of response) {
-        await this.addToQueue(res.linksCollected, res.currentDepth + 1)
-      }
-
-      debug(`${response.length} link(s) just scraped`)
-      debug(`${this.linksCrawled.size} total links crawled`)
-      debug(`${this.linksToCrawl.size} total links to crawl`)
-      await new Promise(resolve => setTimeout(resolve, 300))
-      if (canRequested) return this.followLinks()
+  async pull(link, depth) {
+    try {
+      const { result, linksCollected } = await this.scrapePage(link)
+      await this.scrapeSucceed({ urlScraped: link, result })
+      await this.addToQueue(linksCollected, depth + 1)
     } catch (error) {
       console.error(error)
     }
