@@ -70,9 +70,6 @@ export const addOrUpdateCards = async ({ url, result, product, models, lang }) =
         }
       )
     }
-
-    const t = await models.Card.findAll()
-    console.log(`${t.length} cards saved`)
     return true
   } catch (error) {
     console.error(error)
@@ -95,6 +92,7 @@ export async function startCrawling(models, options) {
     for (const product of products) {
       await Crawler.launch({
         url: product.baseUrl,
+        titleProgress: `Crawling ${product.name} product`,
         sameOrigin: true,
         skipStrictDuplicates: true,
         preRequest: url => isRequestValid({ url, product, lang }),

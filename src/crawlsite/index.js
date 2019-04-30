@@ -1,12 +1,14 @@
-import { retryRequest, debug } from '../utils/utils'
+import { retryRequest } from '../utils/utils'
 import fetch from 'node-fetch'
 import cheerio from 'cheerio'
+const _cliProgress = require('cli-progress')
 
 class Crawler {
   constructor(options) {
     this._options = Object.assign(
       {},
       {
+        titleProgress: 'Crawling',
         maxRequest: -1,
         skipStrictDuplicates: true,
         sameOrigin: true,
@@ -25,6 +27,7 @@ class Crawler {
       onSuccess: this._options.onSuccess || null,
       evaluatePage: this._options.evaluatePage || null
     }
+    this.progressCli = null
   }
 
   /**
@@ -127,8 +130,18 @@ class Crawler {
     const { linksCollected } = await this.scrapePage(sanitizedUrl)
     this.linksCrawled.set(sanitizedUrl, 0)
     this._requestedCount++
+    if (linksCollected.length === 0) return
+    this.progressCli = new _cliProgress.Bar(
+      {
+        format: `${this._options.titleProgress} [{bar}] {percentage}% | ETA: {eta}s | {value}/{total} | Speed: {speed} kbit`
+      },
+      _cliProgress.Presets.rect
+    )
     await this.addToQueue(linksCollected, 1)
-    if (this.linksToCrawl.size > 0) return this.crawl()
+    if (this.linksToCrawl.size > 0) {
+      this.progressCli.start(this.linksToCrawl.size, 0)
+      return this.crawl()
+    }
   }
 
   /**
@@ -141,6 +154,7 @@ class Crawler {
     for (const url of urlCollected) {
       if (depth <= this._options.maxDepth && !(await this.skipRequest(url))) {
         this.linksToCrawl.set(await this.shouldRequest(url), depth)
+        this.progressCli.setTotal(this.linksToCrawl.size)
       }
     }
   }
@@ -157,11 +171,9 @@ class Crawler {
           const currentDepth = this.linksToCrawl.get(currentLink)
           this.linksToCrawl.delete(currentLink)
           this.linksCrawled.set(currentLink)
-          debug(`crawling - ${currentLink}`)
-          debug(`crawing in parallel - ${currentLink}`)
-          debug(`Links to crawl - ${this.linksToCrawl.size}`)
           this.pull(currentLink, currentDepth)
             .then(() => {
+              this.progressCli.update(this.linksCrawled.size)
               currentCrawlers--
               if (currentCrawlers === 0 && this.linksToCrawl.size === 0) resolve()
               else pullQueue()
