@@ -8,8 +8,9 @@ class Crawler {
     this._options = Object.assign(
       {},
       {
-        titleProgress: 'Crawling',
-        maxRequest: -1,
+        titleProgress: 'Crawl in progress',
+        showProgress: true,
+        maxRequest: 3,
         skipStrictDuplicates: true,
         sameOrigin: true,
         maxDepth: 3,
@@ -17,17 +18,50 @@ class Crawler {
       },
       options
     )
-
     this._requestedCount = 0
     this.hostdomain = ''
     this.linksToCrawl = new Map()
     this.linksCrawled = new Map()
     this._actions = {
-      preRequest: this._options.preRequest || null,
+      preRequest: this._options.preRequest || (x => x),
       onSuccess: this._options.onSuccess || null,
       evaluatePage: this._options.evaluatePage || null
     }
     this.progressCli = null
+  }
+
+  /**
+   * Init the app. Begin with the first link, and start the pulling
+   * @return {!Promise<pending>}
+   */
+  async init() {
+    try {
+      const link = new URL(this._options.url)
+      this.hostdomain = link.origin
+    } catch (error) {
+      throw new Error('URL provided is not valid')
+    }
+
+    if (!this.hostdomain) return
+    const sanitizedUrl = await this.shouldRequest(this._options.url)
+    if (!sanitizedUrl) return
+    const { linksCollected } = await this.scrapePage(sanitizedUrl)
+    this.linksCrawled.set(sanitizedUrl)
+    this._requestedCount++
+    if (linksCollected.length === 0) return
+    if (this._options.showProgress) {
+      this.progressCli = new _cliProgress.Bar(
+        {
+          format: `${this._options.titleProgress} [{bar}] {percentage}% | ETA: {eta}s | {value}/{total} | Speed: {speed} kbit`
+        },
+        _cliProgress.Presets.rect
+      )
+    }
+    await this.addToQueue(linksCollected, 1)
+    if (this.linksToCrawl.size > 0) {
+      this._options.showProgress && this.progressCli.start(this.linksToCrawl.size, 0)
+      return this.crawl()
+    }
   }
 
   /**
@@ -37,7 +71,7 @@ class Crawler {
    */
   collectAnchors($, actualHref) {
     const { origin, protocol } = new URL(actualHref)
-    return $('a')
+    const allLinks = $('a')
       .map((i, e) => {
         const href = $(e).attr('href') || ''
         if (href.startsWith('//')) return protocol + href
@@ -52,6 +86,7 @@ class Crawler {
         }
       })
       .get()
+    return [...new Set(allLinks)]
   }
 
   /**
@@ -74,7 +109,7 @@ class Crawler {
    * @return {!Promise<String || Boolean>}
    */
   async shouldRequest(link) {
-    if (this._actions.preRequest && this._actions.preRequest instanceof Function) {
+    if (this._actions.preRequest instanceof Function) {
       try {
         const preRequest = await this._actions.preRequest(link)
         if (typeof preRequest === 'string' || preRequest === false) {
@@ -113,48 +148,17 @@ class Crawler {
   }
 
   /**
-   * Init the app. Begin with the first link, and start the pulling
-   * @return {!Promise<pending>}
-   */
-  async init() {
-    try {
-      const link = new URL(this._options.url)
-      this.hostdomain = link.origin
-    } catch (error) {
-      throw new Error('URL provided is not valid')
-    }
-
-    if (!this.hostdomain) return
-    const sanitizedUrl = await this.shouldRequest(this._options.url)
-    if (!sanitizedUrl) return
-    const { linksCollected } = await this.scrapePage(sanitizedUrl)
-    this.linksCrawled.set(sanitizedUrl, 0)
-    this._requestedCount++
-    if (linksCollected.length === 0) return
-    this.progressCli = new _cliProgress.Bar(
-      {
-        format: `${this._options.titleProgress} [{bar}] {percentage}% | ETA: {eta}s | {value}/{total} | Speed: {speed} kbit`
-      },
-      _cliProgress.Presets.rect
-    )
-    await this.addToQueue(linksCollected, 1)
-    if (this.linksToCrawl.size > 0) {
-      this.progressCli.start(this.linksToCrawl.size, 0)
-      return this.crawl()
-    }
-  }
-
-  /**
    * Add links collected to queue
    * @param {!Array<string>} urlCollected
    * @param {!Number} depth
    * @return {!Promise<pending>}
    */
   async addToQueue(urlCollected, depth = 0) {
-    for (const url of urlCollected) {
+    for (let url of urlCollected) {
       if (depth <= this._options.maxDepth && !(await this.skipRequest(url))) {
-        this.linksToCrawl.set(await this.shouldRequest(url), depth)
-        this.progressCli.setTotal(this.linksToCrawl.size)
+        url = await this.shouldRequest(url)
+        this.linksToCrawl.set(url, depth)
+        this._options.showProgress && this.progressCli.setTotal(this.linksToCrawl.size)
       }
     }
   }
@@ -171,9 +175,10 @@ class Crawler {
           const currentDepth = this.linksToCrawl.get(currentLink)
           this.linksToCrawl.delete(currentLink)
           this.linksCrawled.set(currentLink)
+          // debug(`je crawl ${currentLink}`)
           this.pull(currentLink, currentDepth)
             .then(() => {
-              this.progressCli.update(this.linksCrawled.size)
+              this._options.showProgress && this.progressCli.update(this.linksCrawled.size)
               currentCrawlers--
               if (currentCrawlers === 0 && this.linksToCrawl.size === 0) resolve()
               else pullQueue()
@@ -213,7 +218,7 @@ class Crawler {
    */
   checkMaxRequest() {
     if (this._options.maxRequest === -1) return true
-    return this._requestedCount <= this._options.maxRequest
+    return this.linksToCrawl.size < this._options.maxRequest
   }
 
   /**
