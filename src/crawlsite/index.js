@@ -1,9 +1,9 @@
-import puppeteer from 'puppeteer'
-import { debug } from '../utils/utils'
+import { debug, retryRequest } from '../utils/utils'
+import fetch from 'node-fetch'
+import cheerio from 'cheerio'
 
 class Crawler {
-  constructor(browser, options) {
-    this._browser = browser
+  constructor(options) {
     this._options = Object.assign(
       {},
       {
@@ -11,7 +11,7 @@ class Crawler {
         skipStrictDuplicates: true,
         sameOrigin: true,
         maxDepth: 3,
-        parallel: 5
+        parallel: 50
       },
       options
     )
@@ -32,21 +32,23 @@ class Crawler {
    * @param {!Page} page
    * @return {!Promise<Array<string>>}
    */
-  collectAnchors(page) {
-    return page.evaluate(() => {
-      const allElements = []
-
-      const nodes = document.querySelectorAll('*')
-      nodes.forEach(element => allElements.push(element))
-
-      const links = allElements
-        .filter(el => el.tagName === 'A' && el.href) // Only <a />
-        // eslint-disable-next-line no-undef
-        .filter(el => el.href !== location.href) // Don't need the actual href
-        .map(a => a.href)
-
-      return [...new Set(links)]
-    })
+  collectAnchors($, actualHref) {
+    const { origin, protocol } = new URL(actualHref)
+    return $('a')
+      .map((i, e) => {
+        const href = $(e).attr('href') || ''
+        if (href.startsWith('//')) return protocol + href
+        else if (href.startsWith('/')) return origin + href
+        else return href
+      })
+      .filter((i, href) => {
+        try {
+          return !!new URL(href)
+        } catch (error) {
+          return false
+        }
+      })
+      .get()
   }
 
   /**
@@ -72,7 +74,7 @@ class Crawler {
     if (this._actions.preRequest && this._actions.preRequest instanceof Function) {
       try {
         const preRequest = await this._actions.preRequest(link)
-        if (typeof preRequest === 'string' || !!preRequest === preRequest) {
+        if (typeof preRequest === 'string' || preRequest === false) {
           return preRequest
         }
         throw new Error('preRequest function must return a string or false')
@@ -99,10 +101,10 @@ class Crawler {
    * @param {!Page} page
    * @return {!Promise<any>}
    */
-  async evaluate(page) {
+  async evaluate($) {
     let result = null
     if (this._actions.evaluatePage && this._actions.evaluatePage instanceof Function) {
-      result = await page.evaluate(this._actions.evaluatePage)
+      result = await this._actions.evaluatePage($)
     }
     return result
   }
@@ -120,8 +122,10 @@ class Crawler {
     }
 
     if (!this.hostdomain) return
-    const { linksCollected } = await this.scrapePage(this._options.url)
-    this.linksCrawled.set(this._options.url, 0)
+    const sanitizedUrl = await this.shouldRequest(this._options.url)
+    if (!sanitizedUrl) return
+    const { linksCollected } = await this.scrapePage(sanitizedUrl)
+    this.linksCrawled.set(sanitizedUrl, 0)
     this._requestedCount++
     await this.addToQueue(linksCollected, 1)
     await this.followLinks()
@@ -151,9 +155,6 @@ class Crawler {
 
   async pull() {
     try {
-      if (this._options.parallel < 1 || this._options.parallel > 7) {
-        throw new Error('parallel option must be between 1 and 7')
-      }
       const promises = []
       let canRequested = true
       for (let index = 0; index < this._options.parallel; index++) {
@@ -235,11 +236,16 @@ class Crawler {
    * @return {Promise<{linksCollected: array, result, url: string}>}
    */
   async scrapePage(url) {
-    const page = await this._browser.newPage()
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
-    const [result, linksCollected] = await Promise.all([this.evaluate(page), this.collectAnchors(page)])
-    await page.close()
-    return { linksCollected, result, url }
+    const retriedFetch = retryRequest(fetch, 2)
+    try {
+      const textBuffer = await retriedFetch(url)
+      const textResponse = await textBuffer.text()
+      const $ = cheerio.load(textResponse)
+      const [result, linksCollected] = await Promise.all([this.evaluate($), this.collectAnchors($, url)])
+      return { linksCollected, result, url }
+    } catch (error) {
+      console.error('I am 💩')
+    }
   }
 
   /**
@@ -249,11 +255,9 @@ class Crawler {
    */
   static async launch(options) {
     const startCrawlingAt = new Date()
-    const browser = await puppeteer.launch()
-    const crawler = new Crawler(browser, options)
+    const crawler = new Crawler(options)
     await crawler.init()
     const finishCrawlingAt = new Date()
-    await crawler._browser.close()
     return { startCrawlingAt, finishCrawlingAt, linksVisited: crawler.linksCrawled.size }
   }
 }

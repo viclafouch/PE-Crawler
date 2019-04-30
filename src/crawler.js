@@ -80,12 +80,12 @@ export const addOrUpdateCards = async ({ url, result, product, models, lang }) =
   }
 }
 
-const collectContent = () => {
-  const titleNode = document.querySelector('h1')
-  const description = document.querySelector('meta[name=description]')
+const collectContent = $ => {
+  const title = $('h1').text() || ''
+  const description = $('meta[name=description]').attr('content') || ''
   return {
-    title: titleNode ? titleNode.textContent.trim() : null,
-    description: description ? description.getAttribute('content') : null
+    title,
+    description
   }
 }
 
@@ -98,7 +98,7 @@ export async function startCrawling(models, options) {
         sameOrigin: true,
         skipStrictDuplicates: true,
         preRequest: url => isRequestValid({ url, product, lang }),
-        evaluatePage: collectContent,
+        evaluatePage: $ => collectContent($),
         onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product }),
         ...options
       })
