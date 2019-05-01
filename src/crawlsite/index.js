@@ -1,7 +1,7 @@
-import { retryRequest } from '../utils/utils'
+import { retryRequest, isUrl } from '../utils/utils'
 import fetch from 'node-fetch'
 import cheerio from 'cheerio'
-const _cliProgress = require('cli-progress')
+import _cliProgress from 'cli-progress'
 
 class Crawler {
   constructor(options) {
@@ -36,6 +36,7 @@ class Crawler {
    */
   async init() {
     try {
+      if (!isUrl(this._options.url)) throw new Error()
       const link = new URL(this._options.url)
       this.hostdomain = link.origin
     } catch (error) {
@@ -83,13 +84,7 @@ class Crawler {
         else if (href.startsWith('/')) return origin + href
         else return href
       })
-      .filter((i, href) => {
-        try {
-          return !!new URL(href)
-        } catch (error) {
-          return false
-        }
-      })
+      .filter((i, href) => isUrl(href))
       .get()
     return [...new Set(allLinks)]
   }
@@ -186,7 +181,6 @@ class Crawler {
           this.linksCrawled.set(currentLink)
           this._options.showProgress && this.progressCli.setTotal(this.linksToCrawl.size + this.linksCrawled.size)
           this._options.showProgress && this.progressCli.update(this.linksCrawled.size)
-          // debug(`je crawl ${currentLink}`)
           this.pull(currentLink, currentDepth)
             .then(() => {
               currentCrawlers--
@@ -261,7 +255,12 @@ class Crawler {
       const [result, linksCollected] = await Promise.all([this.evaluate($), this.collectAnchors($, url)])
       return { linksCollected, result, url }
     } catch (error) {
-      console.error('I am 💩')
+      console.error(error)
+      return {
+        linksCollected: [],
+        result: null,
+        url
+      }
     }
   }
 
