@@ -92,8 +92,9 @@ export async function startCrawling(models, options) {
     for (const product of products) {
       await Crawler.launch({
         url: product.baseUrl,
-        titleProgress: `Crawling ${product.name} product`,
+        titleProgress: `Crawling ${product.name} product in ${lang}`,
         sameOrigin: true,
+        maxRequest: 4,
         skipStrictDuplicates: true,
         preRequest: url => isRequestValid({ url, product, lang }),
         evaluatePage: $ => collectContent($),

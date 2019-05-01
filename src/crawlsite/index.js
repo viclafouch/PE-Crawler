@@ -10,7 +10,7 @@ class Crawler {
       {
         titleProgress: 'Crawl in progress',
         showProgress: true,
-        maxRequest: 3,
+        maxRequest: -1,
         skipStrictDuplicates: true,
         sameOrigin: true,
         maxDepth: 3,
@@ -50,17 +50,22 @@ class Crawler {
     this._requestedCount++
     if (linksCollected.length === 0) return
     if (this._options.showProgress) {
+      console.log('')
       this.progressCli = new _cliProgress.Bar(
         {
-          format: `${this._options.titleProgress} [{bar}] {percentage}% | ETA: {eta}s | {value}/{total} | Speed: {speed} kbit`
+          format: `${this._options.titleProgress} [{bar}] {percentage}% | {value}/{total} | Parallel: ${
+            this._options.parallel
+          } | MaxRequest: ${this._options.maxRequest} | MaxDepth ${this._options.maxDepth}`,
+          barsize: 25
         },
-        _cliProgress.Presets.rect
+        _cliProgress.Presets.shades_classic
       )
     }
     await this.addToQueue(linksCollected, 1)
     if (this.linksToCrawl.size > 0) {
       this._options.showProgress && this.progressCli.start(this.linksToCrawl.size, 0)
-      return this.crawl()
+      await this.crawl()
+      this._options.showProgress && this.progressCli.stop()
     }
   }
 
@@ -158,7 +163,6 @@ class Crawler {
       if (depth <= this._options.maxDepth && !(await this.skipRequest(url))) {
         url = await this.shouldRequest(url)
         this.linksToCrawl.set(url, depth)
-        this._options.showProgress && this.progressCli.setTotal(this.linksToCrawl.size)
       }
     }
   }
@@ -170,17 +174,24 @@ class Crawler {
       const pullQueue = () => {
         if (canceled) return
         while (currentCrawlers < this._options.parallel && this.linksToCrawl.size > 0) {
+          canceled = !this.checkMaxRequest()
+          if (canceled) {
+            currentCrawlers === 0 && resolve()
+            break
+          }
           currentCrawlers++
           const currentLink = this.linksToCrawl.keys().next().value
           const currentDepth = this.linksToCrawl.get(currentLink)
           this.linksToCrawl.delete(currentLink)
           this.linksCrawled.set(currentLink)
+          this._options.showProgress && this.progressCli.setTotal(this.linksToCrawl.size + this.linksCrawled.size)
+          this._options.showProgress && this.progressCli.update(this.linksCrawled.size)
           // debug(`je crawl ${currentLink}`)
           this.pull(currentLink, currentDepth)
             .then(() => {
-              this._options.showProgress && this.progressCli.update(this.linksCrawled.size)
               currentCrawlers--
               if (currentCrawlers === 0 && this.linksToCrawl.size === 0) resolve()
+              if (currentCrawlers === 0 && canceled) resolve()
               else pullQueue()
             })
             .catch(error => {
@@ -218,7 +229,7 @@ class Crawler {
    */
   checkMaxRequest() {
     if (this._options.maxRequest === -1) return true
-    return this.linksToCrawl.size < this._options.maxRequest
+    return this.linksCrawled.size < this._options.maxRequest
   }
 
   /**
