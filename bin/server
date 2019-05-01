@@ -1,0 +1,14 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var models = require('../build/models').default
+var crawler = require('../build/crawler').default
+
+models.sequelize.authenticate().then(function() {
+  models.sequelize.sync().then(function() {
+    crawler(models)
+  })
+})

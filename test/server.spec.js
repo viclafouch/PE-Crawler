@@ -25,7 +25,7 @@ describe('server', function() {
         name: product.name,
         baseUrl: product.url
       })
-      new Array(cardByProduct).forEach(async () => {
+      Array.from(Array(cardByProduct).keys()).forEach(async () => {
         await Card.create({
           ...newFakeCard(product),
           ProductId: product.id

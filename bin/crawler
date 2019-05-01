@@ -7,18 +7,16 @@
 var app = require('../build/server').default
 var debug = require('debug')('express-sequelize')
 var models = require('../build/models').default
-var crawler = require('../build/crawler').default
-
-var port = normalizePort(process.env.PORT || '3000')
 
 models.sequelize.authenticate().then(function() {
   models.sequelize.sync().then(function() {
-    app.listen(port, function() {
-      debug('Express server listening on port ' + port.toString())
-      crawler(models)
-    })
+    app.listen(port)
   })
 })
+
+var port = normalizePort(process.env.PORT || '3000')
+
+debug('Express server listening on port ' + port.toString())
 
 function normalizePort(val) {
   var port = parseInt(val, 10)
