@@ -94,7 +94,6 @@ export async function startCrawling(models, options) {
         url: product.baseUrl,
         titleProgress: `Crawling ${product.name} product in ${lang}`,
         sameOrigin: true,
-        maxRequest: 4,
         skipStrictDuplicates: true,
         preRequest: url => isRequestValid({ url, product, lang }),
         evaluatePage: $ => collectContent($),
@@ -119,6 +118,7 @@ export async function crawloop(models, options, restartAfter = 86400000) {
     const finishedCrawlingAt = new Date()
     debug(`Finish crawling at ${startCrawlingAt}`)
     debug(`Crawling finished after ${(finishedCrawlingAt - startCrawlingAt) / 1000} seconds`)
+    if (process.env.NODE_ENV !== 'test') debug(`Waiting ${restartAfter}ms for a new crawl`)
     await models.Card.destroy({
       where: {
         updatedAt: {

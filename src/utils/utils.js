@@ -1,4 +1,4 @@
-export const debug = (content, type = 'log') => ['test', 'development'].includes(process.env.NODE_ENV) && console[type](content)
+export const debug = (content, type = 'log') => process.env.NODE_ENV !== 'production' && console[type](content)
 
 export const retryRequest = (request, maxRetry) => (...args) => {
   let retries = 0

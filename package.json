@@ -9,9 +9,10 @@
   },
   "scripts": {
     "test": "cross-env NODE_ENV=test ./node_modules/.bin/mocha -timeout 1000000 --reporter spec testBuild/*.spec.js",
-    "start": "cross-env DEBUG=express-sequelize node ./bin/server",
-    "crawl": "cross-env DEBUG=express-sequelize node ./bin/crawl",
-    "prestart": "cm build",
+    "start": "npm run build && npm-run-all --parallel server crawler",
+    "server": "cross-env-shell DEBUG=express-sequelize node ./bin/server",
+    "crawler": "cross-env-shell DEBUG=express-sequelize node ./bin/crawler",
+    "build": "cm build",
     "pretest": "cm build && cm build-test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
@@ -19,7 +20,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.18.3",
+    "body-parser": "^1.19.0",
     "chai": "^4.2.0",
     "chalk": "^2.4.2",
     "cheerio": "^1.0.0-rc.3",
@@ -28,15 +29,15 @@
     "express": "^4.16.4",
     "helmet": "^3.16.0",
     "mysql": "^2.17.1",
-    "node-fetch": "^2.4.1",
+    "node-fetch": "^2.5.0",
     "request": "^2.88.0",
     "sequelize": "^4.43.0",
     "sequelize-cli": "^5.4.0",
     "sqlite3": "^4.0.6"
   },
   "devDependencies": {
-    "@babel/core": "^7.4.3",
-    "@babel/preset-env": "^7.4.3",
+    "@babel/core": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
     "centimaitre": "^1.0.3",
     "cross-env": "^5.2.0",
     "eslint": "^5.16.0",
@@ -49,6 +50,7 @@
     "eslint-plugin-standard": "^4.0.0",
     "fs-jetpack": "^2.2.2",
     "mocha": "^6.1.4",
+    "npm-run-all": "^4.1.5",
     "prettier": "^1.17.0",
     "supertest": "^4.0.2"
   }

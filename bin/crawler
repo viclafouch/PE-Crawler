@@ -4,27 +4,11 @@
  * Module dependencies.
  */
 
-var app = require('../build/server').default
-var debug = require('debug')('express-sequelize')
 var models = require('../build/models').default
+var crawler = require('../build/crawler').default
 
 models.sequelize.authenticate().then(function() {
   models.sequelize.sync().then(function() {
-    app.listen(port)
+    crawler(models)
   })
 })
-
-var port = normalizePort(process.env.PORT || '3000')
-
-debug('Express server listening on port ' + port.toString())
-
-function normalizePort(val) {
-  var port = parseInt(val, 10)
-  if (isNaN(port)) {
-    return val
-  }
-  if (port >= 0) {
-    return port
-  }
-  return false
-}
