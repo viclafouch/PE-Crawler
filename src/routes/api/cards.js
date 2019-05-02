@@ -27,7 +27,15 @@ router.post('/cards', async (req, res) => {
     limit,
     offset,
     where,
-    order: [['id', 'ASC']]
+    order: [['id', 'ASC']],
+    include: [
+      {
+        model: models.Product,
+        required: true,
+        as: 'Product',
+        attributes: ['name', 'id']
+      }
+    ]
   })
   return res.status(200).json({ result: cards, count, pages })
 })
