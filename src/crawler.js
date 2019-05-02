@@ -42,12 +42,16 @@ export const addOrUpdateCards = async ({ url, result, product, models, lang }) =
     const uuid = getUuid(url)
     if (isNaN(uuid) || !url.includes('/answer/')) return
 
+    const link = new URL(product.baseUrl)
+    link.pathname = link.pathname + 'answer/'
+    link.pathname = link.pathname + uuid
+
     const datas = {
       uuid,
       title,
       description,
       lang,
-      url: product.baseUrl + '/answer/' + uuid
+      url: link.toString()
     }
 
     if (!(await models.Card.findOne({ where: { uuid, lang, ProductId: product.id } }))) {
