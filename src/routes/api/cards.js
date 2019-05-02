@@ -9,7 +9,10 @@ router.post('/cards', async (req, res) => {
   page = !isNaN(page) ? page : 1
   const where = {}
   // TODO CHANGE TO iLike for PG
-  if (req.body.search) where.title = { [Op.like]: `%${req.body.search}%` }
+  if (req.body.search) {
+    const op = process.env.NODE_ENV === 'production' ? Op.iLike : Op.like
+    where.title = { [op]: `%${req.body.search}%` }
+  }
   if (req.body.lang && languages.includes(req.body.lang)) where.lang = req.body.lang
   if (req.body.productsId) {
     where.ProductId = {
