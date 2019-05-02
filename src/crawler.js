@@ -94,6 +94,7 @@ export async function startCrawling(models, options) {
         url: product.baseUrl,
         titleProgress: `Crawling ${product.name} product in ${lang}`,
         sameOrigin: true,
+        maxDepth: 4,
         skipStrictDuplicates: true,
         preRequest: url => isRequestValid({ url, product, lang }),
         evaluatePage: $ => collectContent($),
