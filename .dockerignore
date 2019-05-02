@@ -4,3 +4,4 @@ testBuild
 test
 build
 db.development.sqlite
+env

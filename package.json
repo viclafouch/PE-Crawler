@@ -17,7 +17,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "docker:build": "docker build -f Dockerfile -t victor/google-support-crawler .",
-    "docker:run": "docker-compose up --abort-on-container-exit"
+    "docker:run": "source env && docker-compose up --abort-on-container-exit"
   },
   "author": "",
   "license": "ISC",
