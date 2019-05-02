@@ -1,0 +1,6 @@
+node_modules
+npm-debug.log
+testBuild
+test
+build
+db.development.sqlite
