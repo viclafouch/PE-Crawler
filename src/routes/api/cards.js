@@ -1,10 +1,10 @@
 import express from 'express'
 import { Op } from 'sequelize'
-import models from '../../models'
 import { limit, languages } from '../../constants'
 const router = express.Router()
 
 router.post('/cards', async (req, res) => {
+  const { models } = res.context
   let page = parseInt(req.body.page, 10)
   page = !isNaN(page) ? page : 1
   const where = {}
