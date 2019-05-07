@@ -9,13 +9,16 @@ const isProduction = process.env.NODE_ENV === 'production'
 const app = express()
 app.use(bodyParser.json())
 
+let hasSynced = false
 app.use(async (req, res, next) => {
   try {
-    await models.sequelize.authenticate()
-    await models.sequelize.sync()
-    res.context = { models }
+    if (!hasSynced) {
+      await models.sequelize.sync()
+      hasSynced = true
+    }
     next()
   } catch (e) {
+    hasSynced = false
     res.status(500)
   }
 })
