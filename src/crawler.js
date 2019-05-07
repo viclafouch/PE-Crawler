@@ -99,6 +99,7 @@ export async function startCrawling(models, options) {
         titleProgress: `Crawling ${product.name} product in ${lang}`,
         sameOrigin: true,
         maxDepth: 4,
+        maxRequest: process.env.NODE_ENV === 'production' ? -1 : 100,
         skipStrictDuplicates: true,
         preRequest: url => isRequestValid({ url, product, lang }),
         evaluatePage: $ => collectContent($),
