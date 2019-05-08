@@ -18,7 +18,7 @@ export const isValidProductUrl = (url, productUrl) => {
     const { href, pathname } = new URL(url)
     if (!href.startsWith(productUrlObject.href)) return false
     if (href === productUrlObject.href) return true
-    return pathname.includes('/answer') || pathname.includes('/topic')
+    return pathname.includes('/answer') || pathname.includes('/topic') || pathname.includes('/troubleshooter')
   } catch (error) {
     return false
   }
@@ -40,10 +40,12 @@ export const addOrUpdateCards = async ({ url, result, product, models, lang }, r
   try {
     const { title, description } = result
     const uuid = getUuid(url)
-    if (isNaN(uuid) || !url.includes('/answer/')) return
+    if (isNaN(uuid) || !title.trim()) return
+    if (!url.includes('/answer/') && !url.includes('/troubleshooter/')) return
 
     const link = new URL(product.baseUrl)
-    link.pathname = link.pathname + 'answer/'
+    if (url.includes('/answer/')) link.pathname = link.pathname + 'answer/'
+    else if (url.includes('/troubleshooter/')) link.pathname = link.pathname + 'troubleshooter/'
     link.pathname = link.pathname + uuid
 
     const datas = {
