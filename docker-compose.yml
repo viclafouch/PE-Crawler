@@ -3,6 +3,8 @@ services:
   crawler:
     image: victor/google-support-crawler
     command: ./wait-for-postgres.sh database npm run crawler
+    labels:
+      - "traefik.enable=false"
     env_file:
       - env
     depends_on:
@@ -14,14 +16,27 @@ services:
       - env
     depends_on:
       - database
-    ports:
-      - '3000:3000'
+    labels:
+      - "traefik.backend=api"
+      - "traefik.frontend.rule=Host:crawler.victor-de-la-fouchardiere.fr"
+      - "traefik.port=3000"
   database:
     image: postgres:11
+    labels:
+      - "traefik.enable=false"
     env_file:
       - env
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
-      - ALLOW_IP_RANGE='0.0.0.0/0'
     volumes:
-      - './pgdata:/var/lib/postgresql/data/pgdata'
+      - '/docker/pgdata:/var/lib/postgresql/data/pgdata'
+  traefik:
+    image: traefik
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/docker/traefik/traefik.toml:/etc/traefik/traefik.toml'
+      - '/docker/traefik/acme.json:/etc/traefik/acme.json'
+    command: --docker --loglevel=DEBUG
+    ports:
+      - 443:443
+      - 80:80
