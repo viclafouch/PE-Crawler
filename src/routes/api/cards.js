@@ -1,6 +1,6 @@
 import express from 'express'
 import { Op } from 'sequelize'
-import { limit, languages } from '../../constants'
+import { limit, languages } from '../../config'
 import models from '../../models'
 const router = express.Router()
 

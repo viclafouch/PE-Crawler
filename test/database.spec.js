@@ -1,6 +1,6 @@
 /* global describe, it, beforeEach */
 
-import { products } from '../build/constants'
+import { products } from '../build/config'
 const assert = require('assert').strict
 
 describe('models', () => {

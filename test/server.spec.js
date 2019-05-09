@@ -2,7 +2,7 @@
 
 import app from '../build/server'
 import request from 'supertest'
-import { products, limit } from '../build/constants'
+import { products, limit } from '../build/config'
 const assert = require('assert').strict
 
 const newFakeCard = product => ({

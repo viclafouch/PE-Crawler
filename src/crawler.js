@@ -1,4 +1,4 @@
-import { products, languages } from './constants'
+import { products, languages } from './config'
 import Crawler from './crawlsite'
 import { debug } from './utils/utils'
 
@@ -110,6 +110,7 @@ export async function startCrawling(models, options) {
           onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product }),
           ...options
         })
+        console.info(`${product.name} in ${lang} has been crawled.`)
       } catch (error) {
         console.warn(`Error with the crawler of the product ${product.name} in lang ${lang}`)
         continue
