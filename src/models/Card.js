@@ -14,7 +14,7 @@ export default (sequelize, type) => {
       allowNull: false
     },
     description: {
-      type: type.STRING,
+      type: type.STRING(1000),
       allowNull: true
     },
     url: {
