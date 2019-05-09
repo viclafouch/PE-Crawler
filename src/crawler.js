@@ -18,7 +18,7 @@ export const isValidProductUrl = (url, productUrl) => {
     const { href, pathname } = new URL(url)
     if (!href.startsWith(productUrlObject.href)) return false
     if (href === productUrlObject.href) return true
-    return pathname.includes('/answer') || pathname.includes('/topic')
+    return pathname.includes('/answer') || pathname.includes('/topic') || pathname.includes('/troubleshooter')
   } catch (error) {
     return false
   }
@@ -36,14 +36,16 @@ export const isRequestValid = ({ url, product, lang }) => {
   return false
 }
 
-export const addOrUpdateCards = async ({ url, result, product, models, lang }) => {
+export const addOrUpdateCards = async ({ url, result, product, models, lang }, retry = 3) => {
   try {
     const { title, description } = result
     const uuid = getUuid(url)
-    if (isNaN(uuid) || !url.includes('/answer/')) return
+    if (isNaN(uuid) || !title.trim()) return
+    if (!url.includes('/answer/') && !url.includes('/troubleshooter/')) return
 
     const link = new URL(product.baseUrl)
-    link.pathname = link.pathname + 'answer/'
+    if (url.includes('/answer/')) link.pathname = link.pathname + 'answer/'
+    else if (url.includes('/troubleshooter/')) link.pathname = link.pathname + 'troubleshooter/'
     link.pathname = link.pathname + uuid
 
     const datas = {
@@ -77,7 +79,12 @@ export const addOrUpdateCards = async ({ url, result, product, models, lang }) =
     return true
   } catch (error) {
     console.error(error)
-    return false
+    if (retry >= 0) {
+      retry--
+      await addOrUpdateCards({ url, result, product, models, lang }, retry)
+    } else {
+      return false
+    }
   }
 }
 
@@ -94,22 +101,31 @@ export async function startCrawling(models, options) {
   const products = await models.Product.findAll()
   for (const lang of languages) {
     for (const product of products) {
-      await Crawler.launch({
-        url: product.baseUrl,
-        titleProgress: `Crawling ${product.name} product in ${lang}`,
-        sameOrigin: true,
-        maxDepth: 4,
-        skipStrictDuplicates: true,
-        preRequest: url => isRequestValid({ url, product, lang }),
-        evaluatePage: $ => collectContent($),
-        onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product }),
-        ...options
-      })
+      try {
+        await Crawler.launch({
+          url: product.baseUrl,
+          titleProgress: `Crawling ${product.name} product in ${lang}`,
+          preRequest: url => isRequestValid({ url, product, lang }),
+          evaluatePage: $ => collectContent($),
+          onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product }),
+          ...options
+        })
+      } catch (error) {
+        console.warn(`Error with the crawler of the product ${product.name} in lang ${lang}`)
+        continue
+      }
     }
   }
 }
 
 export async function crawloop(models, options, restartAfter = 86400000) {
+  let hasSynced = false
+  while (!hasSynced) {
+    try {
+      await models.sequelize.sync()
+      hasSynced = true
+    } catch (error) {}
+  }
   for (const product of products) {
     await models.Product.findOrCreate({
       where: { name: product.name, baseUrl: product.url }

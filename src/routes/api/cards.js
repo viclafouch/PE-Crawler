@@ -1,7 +1,7 @@
 import express from 'express'
 import { Op } from 'sequelize'
-import models from '../../models'
 import { limit, languages } from '../../constants'
+import models from '../../models'
 const router = express.Router()
 
 router.post('/cards', async (req, res) => {
