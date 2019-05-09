@@ -19,7 +19,7 @@ export const products = [
     url: baseUrl.origin + '/adsense/'
   },
   {
-    name: 'Recherche Google',
+    name: 'Google Search',
     url: baseUrl.origin + '/websearch/'
   },
   {
