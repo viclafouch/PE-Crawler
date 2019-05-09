@@ -32,4 +32,4 @@ export const products = [
   }
 ]
 
-export const languages = ['fr']
+export const languages = ['fr', 'en', 'es', 'de', 'pt']
