@@ -137,9 +137,9 @@ const fetchThread = async ({ product, lang, maxThreads }) => {
 }
 
 export async function startCrawlingCards(models, options) {
-  const products = await models.Product.findAll()
+  const prods = await models.Product.findAll()
   for (const lang of languages) {
-    for (const product of products) {
+    for (const product of prods) {
       try {
         await Crawler.launch({
           url: product.baseUrl,
@@ -159,10 +159,10 @@ export async function startCrawlingCards(models, options) {
 }
 
 export async function startCrawlingThreads(models, options) {
-  const products = await models.Product.findAll()
+  let prods = await models.Product.findAll()
   for (const lang of languages) {
     const threadPromises = []
-    for (const product of products) {
+    for (const product of prods) {
       threadPromises.push(fetchThread({ product, lang, maxThreads: options.maxThreads }))
     }
     const threads = await Promise.all(threadPromises)
@@ -196,7 +196,7 @@ export async function crawloop(models, options) {
     try {
       const startCrawlingAt = new Date()
       debug(`Start fetching threads at ${startCrawlingAt}`)
-      await startCrawlingThreads(models)
+      await startCrawlingThreads(models, options)
       const finishedCrawlingAt = new Date()
       debug(`Finish fetching threads at ${finishedCrawlingAt}`)
     } catch (error) {

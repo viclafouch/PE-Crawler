@@ -10,7 +10,7 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test ./node_modules/.bin/mocha -timeout 1000000 --reporter spec testBuild/*.spec.js",
     "start": "npm run build && npm-run-all --parallel server crawler",
-    "server": "cross-env-shell DEBUG=express-sequelize node ./bin/server",
+    "server": "cross-env-shell DEBUG=express-sequelize DROP=0 node ./bin/server",
     "crawler": "cross-env-shell DEBUG=express-sequelize node ./bin/crawler",
     "build": "cm build",
     "pretest": "cm build && cm build-test",
