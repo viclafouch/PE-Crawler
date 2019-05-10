@@ -1,5 +1,7 @@
-import { products, languages } from './config'
+import { products, languages, baseUrl } from './config'
 import Crawler from './crawlsite'
+import fetch from 'node-fetch'
+import cheerio from 'cheerio'
 import { debug } from './utils/utils'
 
 export const getUuid = url => {
@@ -88,7 +90,7 @@ export const addOrUpdateCards = async ({ url, result, product, models, lang }, r
   }
 }
 
-const collectContent = $ => {
+const collectContentCards = $ => {
   const title = $('h1').text() || ''
   const description = $('meta[name=description]').attr('content') || ''
   return {
@@ -97,7 +99,44 @@ const collectContent = $ => {
   }
 }
 
-export async function startCrawling(models, options) {
+const collectContentThreads = $ => {
+  return $('a.thread-list-thread')
+    .map((i, e) => {
+      const href = $(e).attr('href') || ''
+      const url = new URL(baseUrl.toString().substring(0, baseUrl.toString().length - 1) + href)
+      url.search = ''
+      return {
+        uuid: parseInt(url.pathname.split('/').pop()),
+        url: url.toString(),
+        title: $(e)
+          .find('.thread-list-thread__title')
+          .text()
+          .trim(),
+        description: $(e)
+          .find('.thread-list-thread__snippet')
+          .text()
+          .trim()
+      }
+    })
+    .get()
+}
+
+const fetchThread = async ({ product, lang, maxThreads }) => {
+  try {
+    const response = await fetch(
+      `${product.baseUrl}threads?hl=${lang}&thread_filter=(-has%3Areply)%20(created%3A24h)&max_results=${maxThreads}`
+    )
+    const textResponse = await response.text()
+    const $ = cheerio.load(textResponse)
+    const threads = collectContentThreads($)
+    return threads.map(e => ({ ...e, ProductId: product.id }))
+  } catch (error) {
+    console.log(error)
+    return []
+  }
+}
+
+export async function startCrawlingCards(models, options) {
   const products = await models.Product.findAll()
   for (const lang of languages) {
     for (const product of products) {
@@ -106,7 +145,7 @@ export async function startCrawling(models, options) {
           url: product.baseUrl,
           titleProgress: `Crawling ${product.name} product in ${lang}`,
           preRequest: url => isRequestValid({ url, product, lang }),
-          evaluatePage: $ => collectContent($),
+          evaluatePage: $ => collectContentCards($),
           onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product }),
           ...options
         })
@@ -119,7 +158,26 @@ export async function startCrawling(models, options) {
   }
 }
 
-export async function crawloop(models, options, restartAfter = 86400000) {
+export async function startCrawlingThreads(models, options) {
+  const products = await models.Product.findAll()
+  for (const lang of languages) {
+    const threadPromises = []
+    for (const product of products) {
+      threadPromises.push(fetchThread({ product, lang, maxThreads: options.maxThreads }))
+    }
+    const threads = await Promise.all(threadPromises)
+    await models.Thread.destroy({ where: { lang } })
+    for (const thread of threads.flat()) {
+      await models.Thread.create({
+        ...thread,
+        lang
+      })
+    }
+    console.info(`Threads in ${lang} have been fetched.`)
+  }
+}
+
+export async function crawloop(models, options) {
   let hasSynced = false
   while (!hasSynced) {
     try {
@@ -127,31 +185,58 @@ export async function crawloop(models, options, restartAfter = 86400000) {
       hasSynced = true
     } catch (error) {}
   }
+
   for (const product of products) {
     await models.Product.findOrCreate({
       where: { name: product.name, baseUrl: product.url }
     })
   }
-  const looping = async () => {
-    const startCrawlingAt = new Date()
-    debug(`Start crawling at ${startCrawlingAt}`)
-    const { Op } = models.Sequelize
-    await startCrawling(models, options)
-    const finishedCrawlingAt = new Date()
-    debug(`Finish crawling at ${startCrawlingAt}`)
-    debug(`Crawling finished after ${(finishedCrawlingAt - startCrawlingAt) / 1000} seconds`)
-    if (process.env.NODE_ENV !== 'test') debug(`Waiting ${restartAfter}ms for a new crawl`)
-    await models.Card.destroy({
-      where: {
-        updatedAt: {
-          [Op.lt]: startCrawlingAt
-        }
-      }
-    })
-    if (process.env.NODE_ENV !== 'test') setTimeout(() => looping(), restartAfter)
+
+  const loopingThreads = async () => {
+    try {
+      const startCrawlingAt = new Date()
+      debug(`Start fetching threads at ${startCrawlingAt}`)
+      await startCrawlingThreads(models)
+      const finishedCrawlingAt = new Date()
+      debug(`Finish fetching threads at ${finishedCrawlingAt}`)
+    } catch (error) {
+      console.log(error)
+    }
+
+    if (process.env.NODE_ENV !== 'test') {
+      setTimeout(() => loopingThreads(), 180000)
+      debug(`Waiting 180000ms for a new fetch threads`)
+    }
   }
 
-  await looping()
+  const loopingCards = async () => {
+    try {
+      const startCrawlingAt = new Date()
+      debug(`Start crawling cards at ${startCrawlingAt}`)
+      const { Op } = models.Sequelize
+      await startCrawlingCards(models, options)
+      const finishedCrawlingAt = new Date()
+      debug(`Finish crawling cards at ${startCrawlingAt}`)
+      debug(`Crawling cards finished after ${(finishedCrawlingAt - startCrawlingAt) / 1000} seconds`)
+      await models.Card.destroy({
+        where: {
+          updatedAt: {
+            [Op.lt]: startCrawlingAt
+          }
+        }
+      })
+    } catch (error) {
+      console.error(error)
+    }
+
+    if (process.env.NODE_ENV !== 'test') {
+      setTimeout(() => loopingCards(), 86400000)
+      debug(`Waiting 86400000ms for a new crawl`)
+    }
+  }
+
+  if (options.rssFeed) loopingThreads()
+  if (options.crawlCards) loopingCards()
 }
 
 export default crawloop

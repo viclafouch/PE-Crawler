@@ -10,6 +10,9 @@ var crawler = require('../build/crawler').default
 crawler(models, {
   sameOrigin: true,
   maxDepth: 4,
+  rssFeed: true,
+  maxThreads: 8,
+  crawlCards: true,
   maxRequest: process.env.NODE_ENV === 'production' ? -1 : 100,
   skipStrictDuplicates: true
 })
