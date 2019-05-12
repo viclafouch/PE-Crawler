@@ -33,3 +33,5 @@ export const products = [
 ]
 
 export const languages = ['fr', 'en', 'es', 'de', 'pt']
+
+export const maxThreads = [8, 15, 30]

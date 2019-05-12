@@ -6,12 +6,14 @@
 
 var models = require('../build/models').default
 var crawler = require('../build/crawler').default
+var { maxThreads } = require('../build/config')
 
 crawler(models, {
   sameOrigin: true,
   maxDepth: 4,
+  showProgress: false,
   rssFeed: true,
-  maxThreads: 8,
+  maxThreads: maxThreads[maxThreads.length - 1],
   crawlCards: true,
   maxRequest: process.env.NODE_ENV === 'production' ? -1 : 100,
   skipStrictDuplicates: true

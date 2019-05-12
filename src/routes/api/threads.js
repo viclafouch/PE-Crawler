@@ -1,12 +1,13 @@
 import express from 'express'
 import models from '../../models'
 import { Op } from 'sequelize'
-import { languages } from '../../config'
+import { languages, maxThreads } from '../../config'
 
 const router = express.Router()
 
 router.post('/threads', async (req, res) => {
   const lang = req.body.lang && languages.includes(req.body.lang) ? req.body.lang : 'en'
+  const limit = req.body.limit || maxThreads[0]
   const where = { lang }
   const products = await models.Product.findAll({
     where: {
@@ -22,6 +23,7 @@ router.post('/threads', async (req, res) => {
     where.ProductId = product.id
     const threads = await models.Thread.findAll({
       where,
+      limit,
       attributes: ['title', 'url', 'uuid', 'description', 'lang'],
       order: [['id', 'ASC']]
     })

@@ -149,7 +149,7 @@ export async function startCrawlingCards(models, options) {
           onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product }),
           ...options
         })
-        console.info(`${product.name} in ${lang} has been crawled.`)
+        console.info(`Cards for ${product.name} in ${lang} have been crawled.`)
       } catch (error) {
         console.warn(`Error with the crawler of the product ${product.name} in lang ${lang}`)
         continue
