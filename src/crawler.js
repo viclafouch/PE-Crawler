@@ -4,6 +4,11 @@ import fetch from 'node-fetch'
 import cheerio from 'cheerio'
 import { debug } from './utils/utils'
 
+/**
+ * Extract the UUID from an url
+ * @param {!String} url - Url of the page cralwed
+ * @return {!Number || Null} UUID
+ */
 export const getUuid = url => {
   try {
     const { pathname } = new URL(url)
@@ -14,6 +19,12 @@ export const getUuid = url => {
   }
 }
 
+/**
+ * Check if the link is part of the product center.
+ * @param {!String} url - The url collected from the crawler
+ * @param {!String} productUrl - The product URL used to crawl
+ * @return {!Boolean}
+ */
 export const isValidProductUrl = (url, productUrl) => {
   try {
     const productUrlObject = new URL(productUrl)
@@ -26,6 +37,13 @@ export const isValidProductUrl = (url, productUrl) => {
   }
 }
 
+/**
+ * Check if the link can be crawled.
+ * @param {{!String}} args.url - The url collected from the crawler
+ * @param {{!Product}} args.product - The product which is being crawled
+ * @param {{!String}} args.lang - The code lang
+ * @return {!String || false} If the link is valid, return a cleaned link, if not, return false
+ */
 export const isRequestValid = ({ url, product, lang }) => {
   if (isValidProductUrl(url, product.baseUrl)) {
     url = new URL(url)
@@ -38,6 +56,57 @@ export const isRequestValid = ({ url, product, lang }) => {
   return false
 }
 
+/**
+ * Extract data (title / description) of the page crawled
+ * @param {!Function} $ - The HTML document loaded by Cheerio
+ * @return {!Object<String: title, String: description>} Return datas
+ */
+const collectContentCards = $ => {
+  const title = $('h1').text() || ''
+  const description = $('meta[name=description]').attr('content') || ''
+  return {
+    title,
+    description
+  }
+}
+
+/**
+ * Extract data (title / description, uuid, publicUrl) the forum fetched
+ * @param {!Function} $ - The HTML document loaded by Cheerio
+ * @return {!Array <Object>} Return datas
+ */
+const collectContentThreads = $ => {
+  return $('a.thread-list-thread')
+    .map((i, e) => {
+      const publicHref = $(e).attr('href') || ''
+      const publicUrl = new URL(baseUrl.toString().substring(0, baseUrl.toString().length - 1) + publicHref)
+      publicUrl.search = ''
+      return {
+        uuid: parseInt(publicUrl.pathname.split('/').pop()),
+        publicUrl: publicUrl.toString(),
+        title: $(e)
+          .find('.thread-list-thread__title')
+          .text()
+          .trim(),
+        description: $(e)
+          .find('.thread-list-thread__snippet')
+          .text()
+          .trim()
+      }
+    })
+    .get()
+}
+
+/**
+ * The main function used to add Card to the database. If the card already exists, update it.
+ * @param {{!String}} args.url - The cleaned link which has been crawled
+ * @param {{!Object}} args.result - The datas collected on the crawled page
+ * @param {{!Product}} args.product - Product which is being crawled
+ * @param {{!Object}} args.models - Instances of the ORM
+ * @param {{!String}} args.lang - The code lang
+ * @param {!Number} retry - Number of remaining attempts
+ * @return {!Promise <Boolean>}
+ */
 export const addOrUpdateCards = async ({ url, result, product, models, lang }, retry = 3) => {
   try {
     const { title, description } = result
@@ -90,37 +159,13 @@ export const addOrUpdateCards = async ({ url, result, product, models, lang }, r
   }
 }
 
-const collectContentCards = $ => {
-  const title = $('h1').text() || ''
-  const description = $('meta[name=description]').attr('content') || ''
-  return {
-    title,
-    description
-  }
-}
-
-const collectContentThreads = $ => {
-  return $('a.thread-list-thread')
-    .map((i, e) => {
-      const publicHref = $(e).attr('href') || ''
-      const publicUrl = new URL(baseUrl.toString().substring(0, baseUrl.toString().length - 1) + publicHref)
-      publicUrl.search = ''
-      return {
-        uuid: parseInt(publicUrl.pathname.split('/').pop()),
-        publicUrl: publicUrl.toString(),
-        title: $(e)
-          .find('.thread-list-thread__title')
-          .text()
-          .trim(),
-        description: $(e)
-          .find('.thread-list-thread__snippet')
-          .text()
-          .trim()
-      }
-    })
-    .get()
-}
-
+/**
+ * Fetch a forum of a Google product and get the last 24h threads
+ * @param {{!Product}} args.product - Product used to fetch the forum
+ * @param {{!String}} args.lang - The code lang
+ * @param {{!Number}} args.maxThreads - The number of threads max to extract
+ * @return {!Promise <Array>} All threads collected
+ */
 const fetchThread = async ({ product, lang, maxThreads }) => {
   try {
     const response = await fetch(
@@ -144,6 +189,12 @@ const fetchThread = async ({ product, lang, maxThreads }) => {
   }
 }
 
+/**
+ * Crawl every products listed by every langs listed
+ * @param {!Object} models - Instances of the ORM
+ * @param {!Object} options - Options passed to the crawler instance
+ * @return {!Promise <>}
+ */
 export async function startCrawlingCards(models, options) {
   const prods = await models.Product.findAll()
   for (const lang of languages) {
@@ -166,25 +217,44 @@ export async function startCrawlingCards(models, options) {
   }
 }
 
-export async function startCrawlingThreads(models, options) {
+/**
+ *
+ * @param {!Object} models - Instances of the ORM
+ * @param {!Object} args[1].maxThreads - The number of threads max to extract
+ * @return {!Promise <>}
+ */
+export async function startCrawlingThreads(models, { maxThreads }) {
   let prods = await models.Product.findAll()
   for (const lang of languages) {
     const threadPromises = []
-    for (const product of prods) {
-      threadPromises.push(fetchThread({ product, lang, maxThreads: options.maxThreads }))
+    try {
+      for (const product of prods) {
+        threadPromises.push(fetchThread({ product, lang, maxThreads }))
+      }
+      const threads = await Promise.all(threadPromises)
+      await models.Thread.destroy({ where: { lang } })
+      for (const thread of threads.flat()) {
+        await models.Thread.create({
+          ...thread,
+          lang
+        })
+      }
+      console.info(`Threads in ${lang} have been fetched.`)
+    } catch (error) {
+      console.warn(`Error with the fetcher of threads in lang ${lang}`)
+      continue
     }
-    const threads = await Promise.all(threadPromises)
-    await models.Thread.destroy({ where: { lang } })
-    for (const thread of threads.flat()) {
-      await models.Thread.create({
-        ...thread,
-        lang
-      })
-    }
-    console.info(`Threads in ${lang} have been fetched.`)
   }
 }
 
+/**
+ * Main function to start crawler and fetcher in the same time
+ * Reload fetcher after every 3 minutes
+ * Reload crawler after every 24 hours
+ * @param {!Object} models - Instances of the ORM
+ * @param {!Object} options - Options passed to the crawler & fetcher
+ * @return {!Promise <>}
+ */
 export async function crawloop(models, options) {
   let hasSynced = false
   while (!hasSynced) {
@@ -213,7 +283,7 @@ export async function crawloop(models, options) {
 
     if (process.env.NODE_ENV !== 'test') {
       setTimeout(() => loopingThreads(), 180000)
-      debug(`Waiting 180000ms for a new fetch threads`)
+      debug(`Waiting 3min for a new fetch threads`)
     }
   }
 
