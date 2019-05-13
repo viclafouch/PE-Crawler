@@ -102,12 +102,12 @@ const collectContentCards = $ => {
 const collectContentThreads = $ => {
   return $('a.thread-list-thread')
     .map((i, e) => {
-      const href = $(e).attr('href') || ''
-      const url = new URL(baseUrl.toString().substring(0, baseUrl.toString().length - 1) + href)
-      url.search = ''
+      const publicHref = $(e).attr('href') || ''
+      const publicUrl = new URL(baseUrl.toString().substring(0, baseUrl.toString().length - 1) + publicHref)
+      publicUrl.search = ''
       return {
-        uuid: parseInt(url.pathname.split('/').pop()),
-        url: url.toString(),
+        uuid: parseInt(publicUrl.pathname.split('/').pop()),
+        publicUrl: publicUrl.toString(),
         title: $(e)
           .find('.thread-list-thread__title')
           .text()
@@ -129,7 +129,15 @@ const fetchThread = async ({ product, lang, maxThreads }) => {
     const textResponse = await response.text()
     const $ = cheerio.load(textResponse)
     const threads = collectContentThreads($)
-    return threads.map(e => ({ ...e, ProductId: product.id }))
+    return threads.map(thread => {
+      thread.ProductId = product.id
+      const consoleUrl = new URL(
+        baseUrl.toString().substring(0, baseUrl.toString().length - 1) +
+          `/s/community/forum/${product.forumId}/thread/${thread.uuid}`
+      )
+      thread.consoleUrl = consoleUrl.toString()
+      return thread
+    })
   } catch (error) {
     console.log(error)
     return []
@@ -188,7 +196,7 @@ export async function crawloop(models, options) {
 
   for (const product of products) {
     await models.Product.findOrCreate({
-      where: { name: product.name, baseUrl: product.url }
+      where: { name: product.name, baseUrl: product.url, forumId: product.forumId }
     })
   }
 

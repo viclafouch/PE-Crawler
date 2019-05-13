@@ -17,7 +17,14 @@ export default (sequelize, type) => {
       type: type.STRING(1000),
       allowNull: true
     },
-    url: {
+    publicUrl: {
+      type: type.STRING,
+      allowNull: false,
+      validate: {
+        isUrl: true
+      }
+    },
+    consoleUrl: {
       type: type.STRING,
       allowNull: false,
       validate: {

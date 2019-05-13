@@ -7,6 +7,10 @@ export default (sequelize, type) =>
         autoIncrement: true,
         primaryKey: true
       },
+      forumId: {
+        type: type.INTEGER,
+        allowNull: false
+      },
       name: {
         type: type.STRING,
         allowNull: false
