@@ -5,6 +5,19 @@ import { languages, maxThreads } from '../../config'
 
 const router = express.Router()
 
+/**
+ * Get Threads by lang and products (
+ * @params = {
+    lang: String
+    limit: Number
+    productsId: Array <Number>
+ })
+  * @return = {
+    result: Array <Thread>
+    lang: String
+    product: Product
+  }
+ */
 router.post('/threads', async (req, res) => {
   const lang = req.body.lang && languages.includes(req.body.lang) ? req.body.lang : 'en'
   const limit = req.body.limit || maxThreads[0]

@@ -4,6 +4,20 @@ import { limit, languages } from '../../config'
 import models from '../../models'
 const router = express.Router()
 
+/**
+ * Get Cards (
+ * @params = {
+    page: Number
+    search: String
+    lang: String
+    productsId: Array <Number>
+ })
+  * @return = {
+    result: Array <Card>
+    count: Number
+    pages: Number
+  }
+ */
 router.post('/cards', async (req, res) => {
   let page = parseInt(req.body.page, 10)
   page = !isNaN(page) ? page : 1
