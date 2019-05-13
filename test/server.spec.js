@@ -23,7 +23,8 @@ describe('server', function() {
     for (let product of products) {
       product = await Product.create({
         name: product.name,
-        baseUrl: product.url
+        baseUrl: product.url,
+        forumId: product.forumId
       })
       Array.from(Array(cardByProduct).keys()).forEach(async () => {
         await Card.create({

@@ -26,7 +26,8 @@ describe('models', () => {
       for (const product of products) {
         await models.Product.create({
           name: product.name,
-          baseUrl: product.url
+          baseUrl: product.url,
+          forumId: product.forumId
         })
       }
       const count = await models.Product.count()
@@ -37,7 +38,8 @@ describe('models', () => {
       console.log('insert one product')
       await models.Product.create({
         name: 'Test Product',
-        baseUrl: 'https://support.google.com'
+        baseUrl: 'https://support.google.com',
+        forumId: 345678
       })
       console.log('product added')
       const product = await models.Product.findOne()

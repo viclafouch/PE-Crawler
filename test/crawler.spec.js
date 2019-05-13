@@ -6,6 +6,17 @@ import { baseUrl, products, languages } from '../build/config'
 const assert = require('assert').strict
 
 describe('crawler', function() {
+  before(async () => {
+    const { Product, sequelize } = await require('../build/models').default
+    await sequelize.sync({ force: true })
+    for (const product of products) {
+      await Product.create({
+        name: product.name,
+        baseUrl: product.url,
+        forumId: product.forumId
+      })
+    }
+  })
   describe('helpers', () => {
     it('isValidProductUrl', () => {
       const productPathname = '/productName'
@@ -32,18 +43,7 @@ describe('crawler', function() {
     })
   })
 
-  describe('crawling', () => {
-    before(async () => {
-      const { Product, sequelize } = await require('../build/models').default
-      await sequelize.sync({ force: true })
-      for (const product of products) {
-        await Product.create({
-          name: product.name,
-          baseUrl: product.url
-        })
-      }
-    })
-
+  describe('cards', () => {
     beforeEach(async function() {
       this.models = require('../build/models').default
       await this.models.Card.sync({ force: true })
@@ -119,7 +119,8 @@ describe('crawler', function() {
       const maxRequest = 10
       console.log('start crawler')
       await crawloop(this.models, {
-        maxRequest
+        maxRequest,
+        rssFeed: false
       })
       console.log('end crawler')
       const cardCrawled = await this.models.Card.findAll()
@@ -139,7 +140,8 @@ describe('crawler', function() {
       const maxRequest = 10
       console.log('start crawler')
       await crawloop(this.models, {
-        maxRequest
+        maxRequest,
+        rssFeed: false
       })
 
       for (const lang of languages) {
@@ -148,6 +150,12 @@ describe('crawler', function() {
         })
         console.log(`${cards.length} cards founded for ${lang} language`)
       }
+    })
+  })
+
+  describe('threads', () => {
+    before(async () => {
+      console.log('go')
     })
   })
 })
