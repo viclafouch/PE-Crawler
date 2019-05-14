@@ -1,18 +1,30 @@
-# Google-Support-Crawler
+# Google Support Crawler (v1.0.0)
 
-A crawler that extracts data from Google Help Centers to your database
+GSP (Google Support Crawler) is an unofficial project that managed 3 things : 
+- A crawler that will be started every 24 hours to crawl each articles of a product in a specific language. (Exemple : YouTube in french).
+- A fetcher who behaves like a RSS feed. It collects the last N discussions without answer of a community in a specific language. 
+- An API that will be served these datas (crawler / fetcher).
 
-// DOC TODO // 
+## Products supported :
 
+- Google Chrome
+- Google Photos
+- Google Maps
+- Google AdSense
+- Gmail
+- YouTube
+- Google Search
 
-## Running app
+## Languages supported :
 
-```sh
-npm install
-```
+- French
+- English
+- Deutsch
+- Português (Brasil)
+- Español
 
-And then : 
+### Installing from source
 
-```sh
-npm start
-```
+1. Clone the repository: `git clone https://github.com/viclafouch/PE-Center.git`
+2. Install the npm dependencies `npm install`
+3. Build the inject script: `npm run build`
