@@ -21,7 +21,7 @@ describe('crawler', function() {
   describe('helpers', () => {
     it('isValidProductUrl', () => {
       const productPathname = '/productName'
-      const productUrl = Object.assign(baseUrl, {})
+      const productUrl = new URL(baseUrl.toString())
       productUrl.pathname = productPathname
       let url = 'https://support.google.com' + productPathname
       assert.ok(isValidProductUrl(url, productUrl.href))
@@ -30,8 +30,6 @@ describe('crawler', function() {
       url = productUrl.href + '/answer'
       assert.ok(isValidProductUrl(url, productUrl.href))
       url = productUrl.href + '/topic'
-      assert.ok(isValidProductUrl(url, productUrl.href))
-      url = baseUrl.href
       assert.ok(isValidProductUrl(url, productUrl.href))
     })
     it('getUuid', () => {
@@ -154,7 +152,7 @@ describe('crawler', function() {
     })
   })
 
-  describe.only('threads (en lang)', () => {
+  describe('threads (en lang)', () => {
     const lang = 'en'
 
     beforeEach(async function() {
@@ -168,9 +166,11 @@ describe('crawler', function() {
           forumId: 659278
         }
       })
+
       const maxThreads = 4
       const threads = await fetchThread({ product, lang, maxThreads })
       assert.equal(maxThreads, threads.length)
+
       for (const thread of threads) {
         assert.ok(thread.title)
         assert.ok(new URL(thread.consoleUrl))
@@ -182,7 +182,7 @@ describe('crawler', function() {
       }
     })
 
-    it.only('Remove thread if doesnt exist', async function() {
+    it('Remove thread if doesnt exist', async function() {
       const product = await this.models.Product.findOne({
         where: {
           forumId: 659278
