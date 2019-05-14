@@ -160,13 +160,29 @@ export const addOrUpdateCards = async ({ url, result, product, models, lang }, r
 }
 
 /**
+ * Remove all threads by the lang, and add the newests
+ * @param {{!Array <Thread>}} args[0].threads - Threads collected
+ * @param {{!String}} models - The code lang
+ * @return {!Promise <>}
+ */
+export const addThreadsByLang = async ({ threads, lang }, models) => {
+  await models.Thread.destroy({ where: { lang } })
+  for (const thread of threads) {
+    await models.Thread.create({
+      ...thread,
+      lang
+    })
+  }
+}
+
+/**
  * Fetch a forum of a Google product and get the last 24h threads
  * @param {{!Product}} args.product - Product used to fetch the forum
  * @param {{!String}} args.lang - The code lang
  * @param {{!Number}} args.maxThreads - The number of threads max to extract
  * @return {!Promise <Array>} All threads collected
  */
-const fetchThread = async ({ product, lang, maxThreads }) => {
+export const fetchThread = async ({ product, lang, maxThreads }) => {
   try {
     const response = await fetch(
       `${product.baseUrl}threads?hl=${lang}&thread_filter=(-has%3Areply)%20(created%3A24h)&max_results=${maxThreads}`
@@ -232,13 +248,7 @@ export async function startCrawlingThreads(models, { maxThreads }) {
         threadPromises.push(fetchThread({ product, lang, maxThreads }))
       }
       const threads = await Promise.all(threadPromises)
-      await models.Thread.destroy({ where: { lang } })
-      for (const thread of threads.flat()) {
-        await models.Thread.create({
-          ...thread,
-          lang
-        })
-      }
+      await addThreadsByLang({ lang, threads: threads.flat() }, models)
       console.info(`Threads in ${lang} have been fetched.`)
     } catch (error) {
       console.warn(`Error with the fetcher of threads in lang ${lang}`)

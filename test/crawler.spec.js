@@ -1,7 +1,8 @@
 /* global describe, it, before, beforeEach */
 
-import { isValidProductUrl, getUuid, crawloop, addOrUpdateCards } from '../build/crawler'
+import { isValidProductUrl, getUuid, crawloop, addOrUpdateCards, fetchThread, addThreadsByLang } from '../build/crawler'
 import { baseUrl, products, languages } from '../build/config'
+import fetch from 'node-fetch'
 
 const assert = require('assert').strict
 
@@ -153,9 +154,51 @@ describe('crawler', function() {
     })
   })
 
-  describe('threads', () => {
-    before(async () => {
-      console.log('go')
+  describe.only('threads (en lang)', () => {
+    const lang = 'en'
+
+    beforeEach(async function() {
+      this.models = require('../build/models').default
+      await this.models.Thread.sync({ force: true })
+    })
+
+    it('get threads of YouTube in en (so many posts..)', async function() {
+      const product = await this.models.Product.findOne({
+        where: {
+          forumId: 659278
+        }
+      })
+      const maxThreads = 4
+      const threads = await fetchThread({ product, lang, maxThreads })
+      assert.equal(maxThreads, threads.length)
+      for (const thread of threads) {
+        assert.ok(thread.title)
+        assert.ok(new URL(thread.consoleUrl))
+        assert.ok(new URL(thread.publicUrl))
+        const publicFetch = await fetch(thread.publicUrl)
+        assert.ok(publicFetch.ok)
+        const consoleFetch = await fetch(thread.consoleUrl)
+        assert.ok(consoleFetch.ok)
+      }
+    })
+
+    it.only('Remove thread if doesnt exist', async function() {
+      const product = await this.models.Product.findOne({
+        where: {
+          forumId: 659278
+        }
+      })
+      const maxThreads = 4
+      const threads = await fetchThread({ product, lang, maxThreads })
+      await addThreadsByLang({ threads, lang }, this.models)
+      assert.equal(maxThreads, threads.length)
+      const { count } = await this.models.Thread.findAndCountAll({
+        where: { lang }
+      })
+      assert.equal(count, threads.length)
+      threads.shift()
+      await addThreadsByLang({ threads, lang }, this.models)
+      assert.equal(maxThreads - 1, threads.length)
     })
   })
 })

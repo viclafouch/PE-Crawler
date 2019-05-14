@@ -1,5 +1,7 @@
 export const baseUrl = new URL('https://support.google.com')
 export const limit = 10
+export const languages = ['fr', 'en', 'es', 'de', 'pt']
+export const maxThreads = [8, 15, 30]
 
 export const products = [
   {
@@ -38,7 +40,3 @@ export const products = [
     url: baseUrl.origin + '/maps/'
   }
 ]
-
-export const languages = ['fr', 'en', 'es', 'de', 'pt']
-
-export const maxThreads = [8, 15, 30]
