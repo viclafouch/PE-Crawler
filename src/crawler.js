@@ -292,8 +292,8 @@ export async function crawloop(models, options) {
     }
 
     if (process.env.NODE_ENV !== 'test') {
-      setTimeout(() => loopingThreads(), 180000)
-      debug(`Waiting 3min for a new fetch threads`)
+      setTimeout(() => loopingThreads(), 5 * 60 * 1000)
+      debug(`Waiting 5min for a new fetch threads`)
     }
   }
 
