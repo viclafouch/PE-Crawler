@@ -25,6 +25,6 @@ GSP (Google Support Crawler) is an unofficial project that managed 3 things :
 
 ### Installing from source
 
-1. Clone the repository: `git clone https://github.com/viclafouch/PE-Center.git`
+1. Clone the repository: `git clone https://github.com/viclafouch/google-support-crawler.git`
 2. Install the npm dependencies `npm install`
-3. Build the inject script: `npm run build`
+3. Build the inject script: `npm run start`
