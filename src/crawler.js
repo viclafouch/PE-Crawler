@@ -66,7 +66,8 @@ const collectContentCards = $ => {
   const description = $('meta[name=description]').attr('content') || ''
   return {
     title,
-    description
+    description,
+    isError: $('body').find('section.error').length > 0
   }
 }
 
@@ -109,9 +110,9 @@ const collectContentThreads = $ => {
  */
 export const addOrUpdateCards = async ({ url, result, product, models, lang }, retry = 3) => {
   try {
-    const { title, description } = result
+    const { title, description, isError } = result
     const uuid = getUuid(url)
-    if (isNaN(uuid) || !title.trim()) return
+    if (isNaN(uuid) || !title.trim() || isError) return
     if (!url.includes('/answer/') && !url.includes('/troubleshooter/')) return
 
     const link = new URL(product.baseUrl)
