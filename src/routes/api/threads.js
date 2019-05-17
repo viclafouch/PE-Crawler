@@ -37,7 +37,7 @@ router.post('/threads', async (req, res) => {
     const threads = await models.Thread.findAll({
       where,
       limit,
-      attributes: ['title', 'publicUrl', 'consoleUrl', 'uuid', 'description', 'lang'],
+      attributes: ['title', 'publicUrl', 'consoleUrl', 'uuid', 'description', 'lang', 'ProductId'],
       order: [['id', 'ASC']]
     })
     result.push({
