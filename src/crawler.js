@@ -74,14 +74,16 @@ const collectContentCards = $ => {
 /**
  * Extract data (title / description, uuid, publicUrl) the forum fetched
  * @param {!Function} $ - The HTML document loaded by Cheerio
+ * @param {!String} lang - The code lang
  * @return {!Array <Object>} Return datas
  */
-const collectContentThreads = $ => {
+const collectContentThreads = ($, lang) => {
   return $('a.thread-list-thread')
     .map((i, e) => {
       const publicHref = $(e).attr('href') || ''
       const publicUrl = new URL(baseUrl.toString().substring(0, baseUrl.toString().length - 1) + publicHref)
       publicUrl.search = ''
+      publicUrl.searchParams.set('hl', lang)
       return {
         uuid: parseInt(publicUrl.pathname.split('/').pop()),
         publicUrl: publicUrl.toString(),
@@ -190,7 +192,7 @@ export const fetchThread = async ({ product, lang, maxThreads }) => {
     )
     const textResponse = await response.text()
     const $ = cheerio.load(textResponse)
-    const threads = collectContentThreads($)
+    const threads = collectContentThreads($, lang)
     return threads.map(thread => {
       thread.ProductId = product.id
       const consoleUrl = new URL(
