@@ -38,5 +38,15 @@ export const products = [
     forumId: 593221,
     name: 'Google Maps',
     url: baseUrl.origin + '/maps/'
+  },
+  {
+    forumId: 202587,
+    name: 'Google Calendar',
+    url: baseUrl.origin + '/calendar/'
+  },
+  {
+    forumId: 553472,
+    name: 'Google Account',
+    url: baseUrl.origin + '/accounts/'
   }
 ]

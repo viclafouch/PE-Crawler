@@ -39,8 +39,8 @@
     "sqlite3": "^4.0.8"
   },
   "devDependencies": {
-    "@babel/core": "^7.4.4",
-    "@babel/preset-env": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
     "centimaitre": "^1.0.3",
     "cross-env": "^5.2.0",
     "eslint": "^5.16.0",
