@@ -16,6 +16,7 @@ GSP (Google Support Crawler) is an unofficial project that managed 3 things :
 - Google Search
 - Google Account
 - Google Calendar
+- Google Play
 
 ## Languages supported :
 
