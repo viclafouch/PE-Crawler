@@ -3,7 +3,7 @@ module.exports = {
     dialect: 'sqlite',
     host: 'localhost',
     operatorsAliases: false,
-    sync: { force: process.env.DROP === undefined },
+    sync: { force: false },
     storage: './db.development.sqlite',
     logging: false
   },

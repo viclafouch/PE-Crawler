@@ -217,20 +217,35 @@ export const fetchThread = async ({ product, lang, maxThreads }) => {
 export async function startCrawlingCards(models, options) {
   const prods = await models.Product.findAll()
   for (const lang of languages) {
-    for (const product of prods) {
+    if (options.singleCrawl) {
       try {
         await Crawler.launch({
-          url: product.baseUrl,
-          titleProgress: `Crawling ${product.name} product in ${lang}`,
-          preRequest: url => isRequestValid({ url, product, lang }),
+          url: options.singleCrawl.url,
+          showProgress: false,
+          preRequest: url => isRequestValid({ url, product: options.singleCrawl.product, lang }),
           evaluatePage: $ => collectContentCards($),
-          onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product }),
-          ...options
+          onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product: options.singleCrawl.product }),
+          maxRequest: 1
         })
-        console.info(`Cards for ${product.name} in ${lang} have been crawled.`)
       } catch (error) {
-        console.warn(`Error with the crawler of the product ${product.name} in lang ${lang}`)
-        continue
+        console.error(error)
+      }
+    } else {
+      for (const product of prods) {
+        try {
+          await Crawler.launch({
+            url: product.baseUrl,
+            titleProgress: `Crawling ${product.name} product in ${lang}`,
+            preRequest: url => isRequestValid({ url, product, lang }),
+            evaluatePage: $ => collectContentCards($),
+            onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product }),
+            ...options
+          })
+          console.info(`Cards for ${product.name} in ${lang} have been crawled.`)
+        } catch (error) {
+          console.warn(`Error with the crawler of the product ${product.name} in lang ${lang}`)
+          continue
+        }
       }
     }
   }

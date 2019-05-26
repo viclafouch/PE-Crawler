@@ -46,7 +46,8 @@ class Crawler {
     if (!this.hostdomain) return
     const sanitizedUrl = await this.shouldRequest(this._options.url)
     if (!sanitizedUrl) return
-    const { linksCollected } = await this.scrapePage(sanitizedUrl)
+    const { result, linksCollected } = await this.scrapePage(sanitizedUrl)
+    await this.scrapeSucceed({ urlScraped: sanitizedUrl, result })
     this.linksCrawled.set(sanitizedUrl)
     this._requestedCount++
     if (linksCollected.length === 0) return
