@@ -48,5 +48,10 @@ export const products = [
     forumId: 553472,
     name: 'Google Account',
     url: baseUrl.origin + '/accounts/'
+  },
+  {
+    forumId: 412208,
+    name: 'Google Play',
+    url: baseUrl.origin + '/googleplay/'
   }
 ]
