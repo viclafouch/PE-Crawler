@@ -2,7 +2,7 @@ const { languages } = require('../../build/config')
 const models = require('../../build/models').default
 const { isValidProductUrl, getUuid } = require('../../build/crawler')
 
-exports.command = 'add [lang] [title] [description] [url] [productId] [uuid]'
+exports.command = 'add [lang] [title] [description] [url] [product]'
 exports.desc = 'Add a single card'
 exports.builder = {
   lang: {
@@ -50,7 +50,7 @@ exports.handler = async function(argv) {
   }
   const uuid = getUuid(argv.url)
   try {
-    const card = await models.Card.findOrCreate({
+    const { card, created } = await models.Card.findOrCreate({
       where: {
         uuid,
         ProductId: product.id,
@@ -64,10 +64,10 @@ exports.handler = async function(argv) {
         title: argv.title,
         description: argv.description
       }
-    })
-    if (!card[1]) return console.log(`Card ${card.uuid} already exists.`)
+    }).spread((card, created) => ({ card: card.get({ plain: true }), created }))
+    if (!created) return console.log(`Card ${card.uuid} already exists.`)
     console.log(`Card ${card.uuid} created !`)
-    console.table(card[0].get({ plain: true }))
+    console.table(card)
   } catch (error) {
     console.error(error)
   }
