@@ -46,8 +46,8 @@ class Crawler {
     if (!this.hostdomain) return
     const sanitizedUrl = await this.shouldRequest(this._options.url)
     if (!sanitizedUrl) return
-    const { result, linksCollected } = await this.scrapePage(sanitizedUrl)
-    await this.scrapeSucceed({ urlScraped: sanitizedUrl, result })
+    const { result, linksCollected, isError } = await this.scrapePage(sanitizedUrl)
+    if (!isError) await this.scrapeSucceed({ urlScraped: sanitizedUrl, result })
     this.linksCrawled.set(sanitizedUrl)
     this._requestedCount++
     if (linksCollected.length === 0) return
@@ -201,8 +201,8 @@ class Crawler {
 
   async pull(link, depth) {
     try {
-      const { result, linksCollected } = await this.scrapePage(link)
-      await this.scrapeSucceed({ urlScraped: link, result })
+      const { result, linksCollected, isError } = await this.scrapePage(link)
+      if (!isError) await this.scrapeSucceed({ urlScraped: link, result })
       await this.addToQueue(linksCollected, depth + 1)
     } catch (error) {
       console.error(error)
@@ -260,7 +260,8 @@ class Crawler {
       return {
         linksCollected: [],
         result: null,
-        url
+        url,
+        isError: true
       }
     }
   }
