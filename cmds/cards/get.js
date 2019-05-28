@@ -46,7 +46,7 @@ exports.handler = async function(argv) {
   }
   try {
     let { rows: cards, count } = await models.Card.findAndCountAll({
-      attributes: ['title', 'url', 'uuid', 'description', 'lang'],
+      attributes: ['title', 'url', 'uuid', 'lang'],
       limit: 10,
       where,
       order: [['id', 'ASC']],
@@ -65,7 +65,7 @@ exports.handler = async function(argv) {
       delete c['Product.name']
       return c
     })
-    console.log(`${count} card(s) found`)
+    console.log(`${count} card(s) found.`)
     if (count) console.table(cards)
   } catch (error) {
     console.error(error)
