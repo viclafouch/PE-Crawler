@@ -30,7 +30,7 @@ exports.handler = async function(argv) {
   }
 
   const uuid = getUuid(argv.url)
-  const attributes = ['uuid', 'ProductId', 'lang', 'title', 'url']
+  const attributes = ['uuid', 'ProductId', 'lang', 'title']
 
   try {
     const oldCards = await models.Card.findAll({

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+process.env.NODE_ENV = 'production'
 const models = require('./build/models').default
 
 const sync = async () => {

@@ -1,6 +1,7 @@
 version: '3'
 services:
   crawler:
+    container_name: crawler
     image: victor/google-support-crawler
     command: ./wait-for-postgres.sh database npm run crawler
     labels:
@@ -10,6 +11,7 @@ services:
     depends_on:
       - database
   api:
+    container_name: api
     image: victor/google-support-crawler
     command: ./wait-for-postgres.sh database npm run server
     env_file:
