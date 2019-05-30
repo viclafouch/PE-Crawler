@@ -1,6 +1,14 @@
 /* global describe, it, before, beforeEach */
 
-import { isValidProductUrl, getUuid, crawloop, addOrUpdateCards, fetchThread, addThreadsByLang } from '../build/crawler'
+import {
+  isValidProductUrl,
+  getUuid,
+  crawloop,
+  addOrUpdateCards,
+  fetchThread,
+  addThreadsByLang,
+  startCrawlingCards
+} from '../build/crawler'
 import { baseUrl, products, languages } from '../build/config'
 import fetch from 'node-fetch'
 
@@ -199,6 +207,33 @@ describe('crawler', function() {
       threads.shift()
       await addThreadsByLang({ threads, lang }, this.models)
       assert.equal(maxThreads - 1, threads.length)
+    })
+
+    it('301 redirection', async function() {
+      const url = 'https://support.google.com/chrome/answer/95622' // Is 2391819
+      const product = await this.models.Product.findOne({
+        where: {
+          name: 'Chrome'
+        }
+      })
+      await startCrawlingCards(this.models, {
+        singleCrawl: {
+          url: url,
+          product
+        }
+      })
+      const cardNotExists = await this.models.Card.findOne({
+        where: {
+          uuid: 95622
+        }
+      })
+      assert.ok(!cardNotExists)
+      const cardExists = await this.models.Card.findOne({
+        where: {
+          uuid: 2391819
+        }
+      })
+      assert.ok(cardExists)
     })
   })
 })

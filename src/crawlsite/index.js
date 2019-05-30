@@ -25,7 +25,8 @@ class Crawler {
     this._actions = {
       preRequest: this._options.preRequest || (x => x),
       onSuccess: this._options.onSuccess || null,
-      evaluatePage: this._options.evaluatePage || null
+      evaluatePage: this._options.evaluatePage || null,
+      onRedirection: this._options.onRedirection || (({ previousUrl }) => previousUrl)
     }
     this.progressCli = null
   }
@@ -46,8 +47,8 @@ class Crawler {
     if (!this.hostdomain) return
     const sanitizedUrl = await this.shouldRequest(this._options.url)
     if (!sanitizedUrl) return
-    const { result, linksCollected, isError } = await this.scrapePage(sanitizedUrl)
-    if (!isError) await this.scrapeSucceed({ urlScraped: sanitizedUrl, result })
+    const { result, linksCollected, isError, url } = await this.scrapePage(sanitizedUrl)
+    if (!isError) await this.scrapeSucceed({ urlScraped: url, result })
     this.linksCrawled.set(sanitizedUrl)
     this._requestedCount++
     if (linksCollected.length === 0) return
@@ -201,8 +202,8 @@ class Crawler {
 
   async pull(link, depth) {
     try {
-      const { result, linksCollected, isError } = await this.scrapePage(link)
-      if (!isError) await this.scrapeSucceed({ urlScraped: link, result })
+      const { result, linksCollected, isError, url } = await this.scrapePage(link)
+      if (!isError) await this.scrapeSucceed({ urlScraped: url, result })
       await this.addToQueue(linksCollected, depth + 1)
     } catch (error) {
       console.error(error)
@@ -250,8 +251,12 @@ class Crawler {
   async scrapePage(url) {
     const retriedFetch = retryRequest(fetch, 2)
     try {
-      const textBuffer = await retriedFetch(url)
-      const textResponse = await textBuffer.text()
+      const response = await retriedFetch(url)
+      if (response.redirected) {
+        url = await this._options.onRedirection({ previousUrl: url, response })
+        if (!url) throw new Error('Crawl has to stop because of onRedirection return')
+      }
+      const textResponse = await response.text()
       const $ = cheerio.load(textResponse)
       const [result, linksCollected] = await Promise.all([this.evaluate($), this.collectAnchors($, url)])
       return { linksCollected, result, url }

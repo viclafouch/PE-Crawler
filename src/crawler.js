@@ -101,6 +101,17 @@ const collectContentThreads = ($, lang) => {
 }
 
 /**
+ * If url changes, check if the new one is valid
+ * @param {!Object} param0.response - New response from the fetch
+ * @param {!Object} param0.previousUrl - URL that has been fetched
+ * @param {*} product - The product which is being crawled
+ * @param {*} lang - The code lang
+ */
+const onRedirection = ({ response }, product, lang) => {
+  return isRequestValid({ url: response.url, product, lang })
+}
+
+/**
  * The main function used to add Card to the database. If the card already exists, update it.
  * @param {{!String}} args.url - The cleaned link which has been crawled
  * @param {{!Object}} args.result - The datas collected on the crawled page
@@ -225,6 +236,7 @@ export async function startCrawlingCards(models, options) {
           preRequest: url => isRequestValid({ url, product: options.singleCrawl.product, lang }),
           evaluatePage: $ => collectContentCards($),
           onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product: options.singleCrawl.product }),
+          onRedirection: params => onRedirection(params, options.singleCrawl.product, lang),
           maxRequest: 1
         })
       } catch (error) {
@@ -238,6 +250,7 @@ export async function startCrawlingCards(models, options) {
             titleProgress: `Crawling ${product.name} product in ${lang}`,
             preRequest: url => isRequestValid({ url, product, lang }),
             evaluatePage: $ => collectContentCards($),
+            onRedirection: params => onRedirection(params, product, lang),
             onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product }),
             ...options
           })
