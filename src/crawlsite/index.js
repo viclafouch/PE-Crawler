@@ -261,7 +261,6 @@ class Crawler {
       const [result, linksCollected] = await Promise.all([this.evaluate($), this.collectAnchors($, url)])
       return { linksCollected, result, url }
     } catch (error) {
-      console.error(error)
       return {
         linksCollected: [],
         result: null,
