@@ -1,8 +1,8 @@
 # Google Support Crawler (v1.0.0)
 
-GSP (Google Support Crawler) is an unofficial project that managed 3 things : 
+GSP (Google Support Crawler) is an unofficial project that managed 3 things :
 - A crawler that will be started every 24 hours to crawl each articles of a product in a specific language. (Exemple : YouTube in french).
-- A fetcher who behaves like a RSS feed. It collects the last N discussions without answer of a community in a specific language. 
+- A fetcher who behaves like a RSS feed. It collects the last N discussions without answer of a community in a specific language.
 - An API that will be served these datas (crawler / fetcher).
 
 ## Products supported :
@@ -18,6 +18,8 @@ GSP (Google Support Crawler) is an unofficial project that managed 3 things :
 - Google Calendar
 - Google Play
 - Google My Business
+- Google Fi
+- Google Translate
 
 ## Languages supported :
 
