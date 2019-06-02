@@ -62,12 +62,16 @@ export const isRequestValid = ({ url, product, lang }) => {
  * @return {!Object<String: title, String: description>} Return datas
  */
 const collectContentCards = $ => {
-  const title = $('h1').text() || ''
-  const description = $('meta[name=description]').attr('content') || ''
-  return {
-    title,
-    description,
-    isError: $('body').find('section.error').length > 0
+  if ($('body').find('.butterbar').length > 0) {
+    return {}
+  } else {
+    const title = $('h1').text() || ''
+    const description = $('meta[name=description]').attr('content') || ''
+    return {
+      title,
+      description,
+      isError: $('body').find('section.error').length > 0
+    }
   }
 }
 
@@ -78,26 +82,30 @@ const collectContentCards = $ => {
  * @return {!Array <Object>} Return datas
  */
 const collectContentThreads = ($, lang) => {
-  return $('a.thread-list-thread')
-    .map((i, e) => {
-      const publicHref = $(e).attr('href') || ''
-      const publicUrl = new URL(baseUrl.toString().substring(0, baseUrl.toString().length - 1) + publicHref)
-      publicUrl.search = ''
-      publicUrl.searchParams.set('hl', lang)
-      return {
-        uuid: parseInt(publicUrl.pathname.split('/').pop()),
-        publicUrl: publicUrl.toString(),
-        title: $(e)
-          .find('.thread-list-thread__title')
-          .text()
-          .trim(),
-        description: $(e)
-          .find('.thread-list-thread__snippet')
-          .text()
-          .trim()
-      }
-    })
-    .get()
+  if ($('body').find('.butterbar').length > 0) {
+    return []
+  } else {
+    return $('a.thread-list-thread')
+      .map((i, e) => {
+        const publicHref = $(e).attr('href') || ''
+        const publicUrl = new URL(baseUrl.toString().substring(0, baseUrl.toString().length - 1) + publicHref)
+        publicUrl.search = ''
+        publicUrl.searchParams.set('hl', lang)
+        return {
+          uuid: parseInt(publicUrl.pathname.split('/').pop()),
+          publicUrl: publicUrl.toString(),
+          title: $(e)
+            .find('.thread-list-thread__title')
+            .text()
+            .trim(),
+          description: $(e)
+            .find('.thread-list-thread__snippet')
+            .text()
+            .trim()
+        }
+      })
+      .get()
+  }
 }
 
 /**
@@ -125,7 +133,7 @@ export const addOrUpdateCards = async ({ url, result, product, models, lang }, r
   try {
     const { title, description, isError } = result
     const uuid = getUuid(url)
-    if (isNaN(uuid) || !title.trim() || isError) return
+    if (isNaN(uuid) || !title || isError) return
     if (!url.includes('/answer/') && !url.includes('/troubleshooter/')) return
 
     const link = new URL(product.baseUrl)

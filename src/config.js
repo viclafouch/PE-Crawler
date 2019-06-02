@@ -58,5 +58,15 @@ export const products = [
     forumId: 1081366,
     name: 'Google My Business',
     url: baseUrl.origin + '/business/'
+  },
+  {
+    forumId: 1631170,
+    name: 'Google Translate',
+    url: baseUrl.origin + '/translate/'
+  },
+  {
+    forumId: 202537,
+    name: 'Google Fi',
+    url: baseUrl.origin + '/fi/'
   }
 ]
