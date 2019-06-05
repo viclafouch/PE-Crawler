@@ -68,5 +68,15 @@ export const products = [
     forumId: 202537,
     name: 'Google Fi',
     url: baseUrl.origin + '/fi/'
+  },
+  {
+    forumId: 593739,
+    name: 'G Suite Admin',
+    url: baseUrl.origin + '/a/'
+  },
+  {
+    forumId: 654222,
+    name: 'Files by Google',
+    url: baseUrl.origin + '/files/'
   }
 ]
