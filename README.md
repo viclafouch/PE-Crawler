@@ -20,6 +20,8 @@ GSP (Google Support Crawler) is an unofficial project that managed 3 things :
 - Google My Business
 - Google Fi
 - Google Translate
+- G Suite Admininistrator
+- Files by Google
 
 ## Languages supported :
 
@@ -28,6 +30,8 @@ GSP (Google Support Crawler) is an unofficial project that managed 3 things :
 - Deutsch
 - Português (Brasil)
 - Español
+- Pусский
+- Yкраїнська
 
 ### Installing from source
 
