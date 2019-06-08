@@ -1,6 +1,6 @@
 import express from 'express'
 import { Op } from 'sequelize'
-import { limit, languages } from '../../config'
+import { limit, languages, fallbackLang } from '../../config'
 import models from '../../models'
 const router = express.Router()
 
@@ -28,6 +28,7 @@ router.post('/cards', async (req, res) => {
     where.title = { [op]: `%${req.body.search}%` }
   }
   if (req.body.lang && languages.includes(req.body.lang)) where.lang = req.body.lang
+  else where.lang = fallbackLang
   if (req.body.productsId) {
     where.ProductId = {
       [Op.in]: Array.isArray(req.body.productsId) ? req.body.productsId : [req.body.productsId]

@@ -2,14 +2,14 @@
 
 import app from '../build/server'
 import request from 'supertest'
-import { products, limit } from '../build/config'
+import { products, limit, fallbackLang } from '../build/config'
 const assert = require('assert').strict
 
 const newFakeCard = product => ({
   uuid: 7367023,
   title: 'Tests et déploiements des fonctionnalités ' + product.name,
   description: 'test Description',
-  lang: 'fr',
+  lang: fallbackLang,
   url: product.baseUrl + '/' + 7367023
 })
 
@@ -123,7 +123,7 @@ describe('server', function() {
       const card = await this.Card.create({
         uuid: 1,
         title,
-        lang: 'fr',
+        lang: fallbackLang,
         url: product.baseUrl + '/' + 7367023,
         ProductId: product.id
       })
