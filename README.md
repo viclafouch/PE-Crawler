@@ -32,6 +32,7 @@ GSP (Google Support Crawler) is an unofficial project that managed 3 things :
 - Español
 - Pусский
 - Yкраїнська
+- Indonesia
 
 ### Installing from source
 
