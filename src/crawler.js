@@ -274,7 +274,7 @@ export async function startCrawlingCards(models, options) {
         try {
           const manualCards = await models.Card.findAll({
             where: {
-              productId: product.id,
+              ProductId: product.id,
               manually: true
             }
           })
