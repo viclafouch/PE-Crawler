@@ -166,6 +166,7 @@ describe('crawler', function() {
     beforeEach(async function() {
       this.models = require('../build/models').default
       await this.models.Thread.sync({ force: true })
+      await this.models.Card.sync({ force: true })
     })
 
     it('get threads of YouTube in en (so many posts..)', async function() {
@@ -209,6 +210,31 @@ describe('crawler', function() {
       assert.equal(maxThreads - 1, threads.length)
     })
 
+    it('test singleCrawl', async function() {
+      const uuid = 2391819
+      const url = 'https://support.google.com/chrome/answer/' + uuid
+      const product = await this.models.Product.findOne({
+        where: {
+          name: 'Chrome'
+        }
+      })
+      await startCrawlingCards(this.models, {
+        singleCrawl: {
+          url,
+          product
+        }
+      })
+
+      const card = await this.models.Card.findOne({
+        where: {
+          manually: true,
+          uuid
+        }
+      })
+
+      assert.ok(card)
+    })
+
     it('301 redirection', async function() {
       const url = 'https://support.google.com/chrome/answer/95622' // Is 2391819
       const product = await this.models.Product.findOne({
@@ -218,7 +244,7 @@ describe('crawler', function() {
       })
       await startCrawlingCards(this.models, {
         singleCrawl: {
-          url: url,
+          url,
           product
         }
       })

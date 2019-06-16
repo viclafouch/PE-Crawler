@@ -36,7 +36,8 @@ exports.handler = async function(argv) {
     const oldCards = await models.Card.findAll({
       where: {
         uuid,
-        ProductId: product.id
+        ProductId: product.id,
+        manually: true
       },
       attributes,
       raw: true
@@ -53,7 +54,8 @@ exports.handler = async function(argv) {
       raw: true,
       where: {
         uuid: getUuid(argv.url),
-        ProductId: product.id
+        ProductId: product.id,
+        manually: true
       },
       attributes
     })

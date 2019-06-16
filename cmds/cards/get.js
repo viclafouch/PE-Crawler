@@ -25,6 +25,13 @@ exports.builder = {
     alias: 'u',
     type: 'array',
     default: []
+  },
+  manually: {
+    describe: 'manually',
+    demand: false,
+    alias: 'm',
+    type: 'boolean',
+    default: false
   }
 }
 exports.handler = async function(argv) {
@@ -44,6 +51,9 @@ exports.handler = async function(argv) {
       [models.sequelize.Op.in]: argv.uuids
     }
   }
+
+  where.manually = argv.manually
+
   try {
     let { rows: cards, count } = await models.Card.findAndCountAll({
       attributes: ['title', 'url', 'uuid', 'lang'],

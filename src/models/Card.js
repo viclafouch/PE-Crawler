@@ -27,6 +27,11 @@ export default (sequelize, type) => {
     lang: {
       type: type.STRING,
       allowNull: false
+    },
+    manually: {
+      type: type.BOOLEAN,
+      defaultValue: false,
+      allowNull: false
     }
   })
 

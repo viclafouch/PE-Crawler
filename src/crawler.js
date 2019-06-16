@@ -129,7 +129,7 @@ const onRedirection = ({ response }, product, lang) => {
  * @param {!Number} retry - Number of remaining attempts
  * @return {!Promise <Boolean>}
  */
-export const addOrUpdateCards = async ({ url, result, product, models, lang }, retry = 3) => {
+export const addOrUpdateCards = async ({ url, result, product, models, lang, manually = false }, retry = 3) => {
   try {
     const { title, description, isError } = result
     const uuid = getUuid(url)
@@ -146,6 +146,7 @@ export const addOrUpdateCards = async ({ url, result, product, models, lang }, r
       title,
       description,
       lang,
+      manually,
       url: link.toString()
     }
 
@@ -158,7 +159,8 @@ export const addOrUpdateCards = async ({ url, result, product, models, lang }, r
       await models.Card.update(
         {
           title: datas.title,
-          description: datas.description
+          description: datas.description,
+          manually
         },
         {
           where: {
@@ -243,7 +245,8 @@ export async function startCrawlingCards(models, options) {
           showProgress: false,
           preRequest: url => isRequestValid({ url, product: options.singleCrawl.product, lang }),
           evaluatePage: $ => collectContentCards($),
-          onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product: options.singleCrawl.product }),
+          onSuccess: ({ result, url }) =>
+            addOrUpdateCards({ result, url, lang, models, product: options.singleCrawl.product, manually: true }),
           onRedirection: params => onRedirection(params, options.singleCrawl.product, lang),
           maxRequest: 1
         })
@@ -262,10 +265,33 @@ export async function startCrawlingCards(models, options) {
             onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product }),
             ...options
           })
-          console.info(`Cards for ${product.name} in ${lang} have been crawled.`)
+          console.info(`Cards for ${product.name} in '${lang}' have been crawled.`)
         } catch (error) {
-          console.warn(`Error with the crawler of the product ${product.name} in lang ${lang}`)
+          console.warn(`Error with the crawler of the product ${product.name} in lang '${lang}'`)
           continue
+        }
+
+        try {
+          const manualCards = await models.Card.findAll({
+            where: {
+              productId: product.id,
+              manually: true
+            }
+          })
+          for (const card of manualCards) {
+            await Crawler.launch({
+              url: card.url,
+              showProgress: false,
+              preRequest: url => isRequestValid({ url, product, lang }),
+              evaluatePage: $ => collectContentCards($),
+              onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product, manually: true }),
+              onRedirection: params => onRedirection(params, product, lang),
+              maxRequest: 1
+            })
+          }
+          console.info(`${manualCards.length} manual Cards for ${product.name} in ${lang} have been crawled.`)
+        } catch (error) {
+          console.error(error)
         }
       }
     }
