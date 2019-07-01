@@ -5,11 +5,12 @@ services:
     image: victor/google-support-crawler
     command: ./wait-for-postgres.sh database npm run crawler
     labels:
-      - "traefik.enable=false"
+      - 'traefik.enable=false'
     env_file:
       - env
     depends_on:
       - database
+    restart: on-failure
   api:
     container_name: api
     image: victor/google-support-crawler
@@ -19,19 +20,21 @@ services:
     depends_on:
       - database
     labels:
-      - "traefik.backend=api"
-      - "traefik.frontend.rule=Host:crawler.victor-de-la-fouchardiere.fr"
-      - "traefik.port=3000"
+      - 'traefik.backend=api'
+      - 'traefik.frontend.rule=Host:crawler.victor-de-la-fouchardiere.fr'
+      - 'traefik.port=3000'
+    restart: on-failure
   database:
     image: postgres:11
     labels:
-      - "traefik.enable=false"
+      - 'traefik.enable=false'
     env_file:
       - env
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - '/docker/pgdata:/var/lib/postgresql/data/pgdata'
+    restart: on-failure
   traefik:
     image: traefik
     volumes:
@@ -42,3 +45,4 @@ services:
     ports:
       - 443:443
       - 80:80
+    restart: on-failure
