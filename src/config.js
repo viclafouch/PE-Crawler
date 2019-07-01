@@ -79,5 +79,20 @@ export const products = [
     forumId: 654222,
     name: 'Files by Google',
     url: baseUrl.origin + '/files/'
+  },
+  {
+    forumId: 570924,
+    name: 'Google Drive',
+    url: baseUrl.origin + '/drive/'
+  },
+  {
+    forumId: 1386689,
+    name: 'Docs Editor',
+    url: baseUrl.origin + '/docs/'
+  },
+  {
+    forumId: 224051,
+    name: 'Course Kit',
+    url: baseUrl.origin + '/coursekit/'
   }
 ]

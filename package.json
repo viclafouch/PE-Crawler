@@ -38,8 +38,8 @@
     "pg": "^7.11.0",
     "request": "^2.88.0",
     "sequelize": "^4.43.0",
-    "sequelize-cli": "^5.4.0",
-    "sqlite3": "^4.0.8",
+    "sequelize-cli": "^5.5.0",
+    "sqlite3": "^4.0.9",
     "yargs": "^13.2.4"
   },
   "devDependencies": {
@@ -47,18 +47,18 @@
     "@babel/preset-env": "^7.4.5",
     "centimaitre": "^1.0.3",
     "cross-env": "^5.2.0",
-    "eslint": "^5.16.0",
-    "eslint-config-prettier": "^4.3.0",
+    "eslint": "^6.0.1",
+    "eslint-config-prettier": "^6.0.0",
     "eslint-config-standard": "^12.0.0",
-    "eslint-plugin-import": "^2.17.3",
+    "eslint-plugin-import": "^2.18.0",
     "eslint-plugin-node": "^9.1.0",
     "eslint-plugin-prettier": "^3.1.0",
-    "eslint-plugin-promise": "^4.1.1",
+    "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.0",
     "fs-jetpack": "^2.2.2",
     "mocha": "^6.1.4",
     "npm-run-all": "^4.1.5",
-    "prettier": "^1.17.1",
+    "prettier": "^1.18.2",
     "supertest": "^4.0.2"
   }
 }
