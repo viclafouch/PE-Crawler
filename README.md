@@ -22,6 +22,9 @@ GSP (Google Support Crawler) is an unofficial project that managed 3 things :
 - Google Translate
 - G Suite Admininistrator
 - Files by Google
+- Docs Editor
+- Course Kit
+- Google Drive
 
 ## Languages supported :
 
