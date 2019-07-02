@@ -93,6 +93,6 @@ export const products = [
   {
     forumId: 224051,
     name: 'Course Kit',
-    url: baseUrl.origin + '/coursekit/'
+    url: baseUrl.origin + '/edu/coursekit/'
   }
 ]
