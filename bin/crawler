@@ -10,7 +10,7 @@ var { maxThreads } = require('../build/config')
 
 crawler(models, {
   sameOrigin: true,
-  maxDepth: 4,
+  maxDepth: 8,
   showProgress: false,
   rssFeed: true,
   maxThreads: maxThreads[maxThreads.length - 1],
