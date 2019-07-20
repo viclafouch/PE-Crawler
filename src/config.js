@@ -94,5 +94,15 @@ export const products = [
     forumId: 224051,
     name: 'Course Kit',
     url: baseUrl.origin + '/edu/coursekit/'
+  },
+  {
+    forumId: 1663244,
+    name: 'Search Console',
+    url: baseUrl.origin + '/webmasters/'
+  },
+  {
+    forumId: 344043,
+    name: 'Pixel Phone',
+    url: baseUrl.origin + '/pixelphone/'
   }
 ]
