@@ -56,9 +56,7 @@ class Crawler {
       console.log('')
       this.progressCli = new _cliProgress.Bar(
         {
-          format: `${this._options.titleProgress} [{bar}] {percentage}% | {value}/{total} | Parallel: ${
-            this._options.parallel
-          } | MaxRequest: ${this._options.maxRequest} | MaxDepth ${this._options.maxDepth}`,
+          format: `${this._options.titleProgress} [{bar}] {percentage}% | {value}/{total} | Parallel: ${this._options.parallel} | MaxRequest: ${this._options.maxRequest} | MaxDepth ${this._options.maxDepth}`,
           barsize: 25
         },
         _cliProgress.Presets.shades_classic
@@ -191,6 +189,7 @@ class Crawler {
               else pullQueue()
             })
             .catch(error => {
+              console.error(error)
               canceled = true
               reject(error)
             })
