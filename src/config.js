@@ -104,5 +104,15 @@ export const products = [
     forumId: 344043,
     name: 'Pixel Phone',
     url: baseUrl.origin + '/pixelphone/'
+  },
+  {
+    forumId: 1631239,
+    name: 'Blogger',
+    url: baseUrl.origin + '/blogger/'
+  },
+  {
+    forumId: 589387,
+    name: 'Google Voice',
+    url: baseUrl.origin + '/voice/'
   }
 ]
