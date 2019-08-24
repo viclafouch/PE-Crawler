@@ -1,5 +1,5 @@
 import { products, languages, baseUrl } from './config'
-import Crawler from './crawlsite'
+import Crawler from '@viclafouch/fetch-crawler'
 import fetch from 'node-fetch'
 import cheerio from 'cheerio'
 import { debug } from './utils/utils'
