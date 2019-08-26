@@ -114,5 +114,20 @@ export const products = [
     forumId: 589387,
     name: 'Google Voice',
     url: baseUrl.origin + '/voice/'
+  },
+  {
+    forumId: 804218,
+    name: 'Google Classroom',
+    url: baseUrl.origin + '/edu/classroom/'
+  },
+  {
+    forumId: 213251,
+    name: 'Expeditions',
+    url: baseUrl.origin + '/edu/expeditions/'
+  },
+  {
+    forumId: 641710,
+    name: 'Jamboard',
+    url: baseUrl.origin + '/jamboard/'
   }
 ]

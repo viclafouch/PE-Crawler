@@ -242,7 +242,6 @@ export async function startCrawlingCards(models, options) {
       try {
         await Crawler.launch({
           url: options.singleCrawl.url,
-          showProgress: false,
           preRequest: url => isRequestValid({ url, product: options.singleCrawl.product, lang }),
           evaluatePage: $ => collectContentCards($),
           onSuccess: ({ result, url }) =>
@@ -258,7 +257,6 @@ export async function startCrawlingCards(models, options) {
         try {
           await Crawler.launch({
             url: product.baseUrl,
-            titleProgress: `Crawling ${product.name} product in ${lang}`,
             preRequest: url => isRequestValid({ url, product, lang }),
             evaluatePage: $ => collectContentCards($),
             onRedirection: params => onRedirection(params, product, lang),
@@ -281,7 +279,6 @@ export async function startCrawlingCards(models, options) {
           for (const card of manualCards) {
             await Crawler.launch({
               url: card.url,
-              showProgress: false,
               preRequest: url => isRequestValid({ url, product, lang }),
               evaluatePage: $ => collectContentCards($),
               onSuccess: ({ result, url }) => addOrUpdateCards({ result, url, lang, models, product, manually: true }),
