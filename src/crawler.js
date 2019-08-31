@@ -309,10 +309,14 @@ export async function startCrawlingThreads(models, { maxThreads }) {
       for (const product of prods) {
         threadPromises.push(fetchThread({ product, lang, maxThreads }))
       }
-      const threads = await Promise.all(threadPromises)
+      const threads = await Promise.race([
+        new Promise((resolve, reject) => setTimeout(() => reject(new Error('timeout')), 10 * 60 * 1000)),
+        Promise.all(threadPromises)
+      ])
       await addThreadsByLang({ lang, threads: threads.flat() }, models)
       console.info(`Threads in ${lang} have been fetched.`)
     } catch (error) {
+      console.warn(error)
       console.warn(`Error with the fetcher of threads in lang ${lang}`)
       continue
     }
