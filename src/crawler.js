@@ -2,7 +2,7 @@ import { products, languages, baseUrl } from './config'
 import Crawler from '@viclafouch/fetch-crawler'
 import fetch from 'node-fetch'
 import cheerio from 'cheerio'
-import { debug } from './utils/utils'
+import { debug, wait } from './utils/utils'
 
 /**
  * Extract the UUID from an url
@@ -199,6 +199,28 @@ export const addThreadsByLang = async ({ threads, lang }, models) => {
   }
 }
 
+const requestThread = async (...args) => {
+  const response = await fetch(args)
+  const textResponse = await response.text()
+  const $ = cheerio.load(textResponse)
+  if ($('body').find('.thread-list-group')) return $
+  else throw new Error('PAGE NOT FOUND')
+}
+
+const retryDecoratorThread = (func, maxRetries = 5) => (...args) => {
+  let retries = 0
+  const _retry = () =>
+    func(...args).catch(async error => {
+      console.warn(error)
+      if (retries < maxRetries) {
+        retries++
+        await wait(3000)
+        return _retry(...args)
+      } else return Promise.reject(error)
+    })
+  return _retry()
+}
+
 /**
  * Fetch a forum of a Google product and get the last 24h threads
  * @param {{!Product}} args.product - Product used to fetch the forum
@@ -206,14 +228,14 @@ export const addThreadsByLang = async ({ threads, lang }, models) => {
  * @param {{!Number}} args.maxThreads - The number of threads max to extract
  * @return {!Promise <Array>} All threads collected
  */
-export const fetchThread = async ({ product, lang, maxThreads }) => {
+export const fetchThread = async ({ product, lang, maxThreads, models }) => {
+  const retriedRequest = retryDecoratorThread(requestThread, 10)
+
   try {
-    const response = await fetch(
-      `${product.baseUrl}threads?hl=${lang}&thread_filter=(-has%3Areply)%20(created%3A24h)&max_results=${maxThreads}`
-    )
-    const textResponse = await response.text()
-    const $ = cheerio.load(textResponse)
+    const url = `${product.baseUrl}threads?hl=${lang}&thread_filter=(-has%3Areply)%20(created%3A24h)&max_results=${maxThreads}`
+    const $ = await retriedRequest(url)
     const threads = collectContentThreads($, lang)
+    console.log(`${threads.length} found for ${product.name} in ${lang}`)
     return threads.map(thread => {
       thread.ProductId = product.id
       const consoleUrl = new URL(
@@ -224,8 +246,12 @@ export const fetchThread = async ({ product, lang, maxThreads }) => {
       return thread
     })
   } catch (error) {
-    console.log(error)
-    return []
+    return models.Thread.findAll({
+      where: {
+        lang,
+        ProductId: product.id
+      }
+    })
   }
 }
 
@@ -307,7 +333,7 @@ export async function startCrawlingThreads(models, { maxThreads }) {
     const threadPromises = []
     try {
       for (const product of prods) {
-        threadPromises.push(fetchThread({ product, lang, maxThreads }))
+        threadPromises.push(fetchThread({ product, lang, maxThreads, models }))
       }
       const threads = await Promise.race([
         new Promise((resolve, reject) => setTimeout(() => reject(new Error('timeout')), 10 * 60 * 1000)),
