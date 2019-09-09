@@ -203,7 +203,7 @@ const requestThread = async (...args) => {
   const response = await fetch(args)
   const textResponse = await response.text()
   const $ = cheerio.load(textResponse)
-  if ($('body').find('.thread-list-group')) return $
+  if ($('body').find('.thread-list-group').length > 0) return $
   else throw new Error('PAGE NOT FOUND')
 }
 
@@ -211,7 +211,7 @@ const retryDecoratorThread = (func, maxRetries = 5) => (...args) => {
   let retries = 0
   const _retry = () =>
     func(...args).catch(async error => {
-      console.warn(error)
+      console.error(error.message)
       if (retries < maxRetries) {
         retries++
         await wait(3000)
