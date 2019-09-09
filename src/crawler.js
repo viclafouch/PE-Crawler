@@ -246,12 +246,14 @@ export const fetchThread = async ({ product, lang, maxThreads, models }) => {
       return thread
     })
   } catch (error) {
-    return models.Thread.findAll({
+    const threads = await models.Thread.findAll({
       where: {
         lang,
         ProductId: product.id
       }
     })
+    console.log(`Get the previous threads (${threads.length}) for ${product.name} in ${lang}`)
+    return threads
   }
 }
 
