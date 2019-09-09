@@ -330,7 +330,7 @@ export async function startCrawlingCards(models, options) {
  * @return {!Promise <>}
  */
 export async function startCrawlingThreads(models, { maxThreads }) {
-  let prods = await models.Product.findAll()
+  const prods = await models.Product.findAll()
   for (const lang of languages) {
     const threadPromises = []
     try {

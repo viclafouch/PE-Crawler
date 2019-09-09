@@ -5,7 +5,7 @@ exports.desc = 'Get all products'
 exports.builder = {}
 exports.handler = async function(argv) {
   try {
-    let { rows: products, count } = await models.Product.findAndCountAll({
+    const { rows: products, count } = await models.Product.findAndCountAll({
       order: [['id', 'ASC']],
       raw: true
     })
