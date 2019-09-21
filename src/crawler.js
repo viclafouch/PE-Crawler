@@ -235,7 +235,7 @@ export const fetchThread = async ({ product, lang, maxThreads, models }) => {
     const url = `${product.baseUrl}threads?hl=${lang}&thread_filter=(-has%3Areply)%20(created%3A24h)&max_results=${maxThreads}`
     const $ = await retriedRequest(url)
     const threads = collectContentThreads($, lang)
-    console.log(`${threads.length} found for ${product.name} in ${lang}`)
+    console.log(`${threads.length} thread(s) found for ${product.name} in ${lang}`)
     return threads.map(thread => {
       thread.ProductId = product.id
       const consoleUrl = new URL(
