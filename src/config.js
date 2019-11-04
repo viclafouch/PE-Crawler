@@ -129,5 +129,10 @@ export const products = [
     forumId: 641710,
     name: 'Jamboard',
     url: baseUrl.origin + '/jamboard/'
+  },
+  {
+    forumId: 2369244,
+    name: 'Android',
+    url: baseUrl.origin + '/android/'
   }
 ]
