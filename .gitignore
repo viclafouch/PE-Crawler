@@ -1,8 +1,2 @@
 /node_modules
-/build
-/testBuild
-.vscode
-.DS_Store
-*.sqlite
-pgdata
 env
