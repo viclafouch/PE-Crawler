@@ -8,5 +8,21 @@
     "url": "https://github.com/viclafouch/google-support-crawler.git"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "crawler": "^1.2.2",
+    "fs-jetpack": "^4.0.1",
+    "simplecrawler": "^1.1.9"
+  },
+  "scripts": {
+    "lint:fix": "eslint . --fix"
+  },
+  "devDependencies": {
+    "eslint": "^7.12.1",
+    "eslint-config-standard": "^16.0.1",
+    "eslint-config-prettier": "^6.15.0",
+    "prettier": "^2.1.2",
+    "standard": "^16.0.1"
+  }
 }
