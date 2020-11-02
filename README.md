@@ -1,4 +1,4 @@
-# Google Support Crawler (v1.0.0)
+# Google Support Crawler (v2.0.0)
 
 GSP (Google Support Crawler) is an unofficial project that managed 3 things :
 - A crawler that will be started every 24 hours to crawl each articles of a product in a specific language. (Exemple : YouTube in french).
