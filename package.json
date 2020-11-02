@@ -12,20 +12,18 @@
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
     "colors": "^1.4.0",
-    "crawler": "^1.2.2",
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "fs-jetpack": "^4.0.1",
     "simplecrawler": "^1.1.9"
   },
   "scripts": {
+    "start": "node index.js",
     "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
     "eslint": "^7.12.1",
     "eslint-config-standard": "^16.0.1",
-    "eslint-config-prettier": "^6.15.0",
-    "prettier": "^2.1.2",
     "standard": "^16.0.1"
   }
 }
