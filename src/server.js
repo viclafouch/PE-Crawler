@@ -2,7 +2,8 @@ import express from 'express'
 
 const app = express()
 
-app.use(express.static('threads'))
+app.use('/threads', express.static('threads'))
+app.use('/answers', express.static('answers'))
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
