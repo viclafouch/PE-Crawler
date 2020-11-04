@@ -1,3 +1,5 @@
+import colors from 'colors'
+
 export const isUrl = string => {
   const regexp = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!-/]))?/
   return regexp.test(string)
@@ -9,6 +11,10 @@ export const relativePath = (hrefAbsolute, currentLink) => {
   } catch (error) {
     return null
   }
+}
+
+export const log = ({ status = 'info', message = '' }) => {
+  console.log(colors[status](message))
 }
 
 export const getUuid = url => {

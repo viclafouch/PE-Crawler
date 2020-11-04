@@ -1,7 +1,9 @@
 import jetpack from 'fs-jetpack'
-import colors from 'colors'
 import cheerio from 'cheerio'
 import Crawler from 'simplecrawler'
+import { log } from './shared/helpers'
+
+const debug = (args) => log({ ...args, message: `[THREADS]: ${args.message}` })
 
 const CREATE_THREADS_URL = (productCode) => `https://support.google.com/${productCode}/threads`
 const DIR_THREADS = jetpack.dir('threads')
@@ -41,7 +43,10 @@ export const crawlCommunities = ({ products, languages }) => new Promise(resolve
     const languageCode = (new URL(queueItem.url)).searchParams.get('hl')
     const PRODUCT_DIR = DIR_THREADS.dir(productCode)
     const data = { 'last-update': new Date(), name: product.name, lang: languageCode, threads }
-    console.log(colors.info(`- (THREADS) [${product.name}/${languageCode}]: ${threads.length} threads`))
+    debug({
+      status: 'success',
+      message: `[${product.name}/${languageCode}]: ${threads.length} threads`
+    })
     PRODUCT_DIR.write(`${languageCode}.json`, data, { jsonIndent: 2 })
   })
 
@@ -49,23 +54,38 @@ export const crawlCommunities = ({ products, languages }) => new Promise(resolve
     const productCode = queueItem.uriPath.split('/')[1]
     const product = products.find(({ code }) => code === productCode)
     const languageCode = (new URL(queueItem.url)).searchParams.get('hl')
-    console.log(colors.warn(`[Status: ${queueItem.status}] for ${product.name} in ${languageCode}`))
+    debug({
+      status: 'warn',
+      message: `[Status: ${queueItem.status}] for ${product.name} in ${languageCode}`
+    })
   })
 
   crawler.on('fetcherror', (queueItem, response) => {
-    console.log(colors.error(`An error occured on [${queueItem.url}]: ${response.statusMessage}`))
+    debug({
+      status: 'error',
+      message: `An error occured on [${queueItem.url}]: ${response.statusMessage}`
+    })
   })
 
   crawler.on('fetchclienterror', (queueItem, error) => {
-    console.log(colors.error(`A client error occured on [${queueItem.url}]: ${error.message}`))
+    debug({
+      status: 'error',
+      message: `A client error occured on [${queueItem.url}]: ${error.message}`
+    })
   })
 
   crawler.on('fetch404', (queueItem, response) => {
-    console.log(colors.warn(`Status 404 on [${queueItem.url}]: ${response.statusMessage}`))
+    debug({
+      status: 'error',
+      message: `Status 404 on [${queueItem.url}]: ${response.statusMessage}`
+    })
   })
 
   crawler.on('fetch410', (queueItem, response) => {
-    console.log(colors.warn(`Status 410 on [${queueItem.url}]: ${response.statusMessage}`))
+    debug({
+      status: 'warn',
+      message: `Status 410 on [${queueItem.url}]: ${response.statusMessage}`
+    })
   })
 
   crawler.on('complete', resolve)
