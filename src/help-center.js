@@ -8,6 +8,14 @@ const debug = (args) => log({ ...args, message: `[ANSWER]: ${args.message}` })
 const CREATE_HELP_CENTER_URL = (productCode) => `https://support.google.com/${productCode}`
 const DIR_ANSWERS = jetpack.dir('answers')
 
+const isDifferentLanguage = ($, language) => {
+  return language !== $('html').attr('lang')
+}
+
+const isGuideSteps = ($) => {
+  return $('body').find('.guide-button').length > 0
+}
+
 const crawlProduct = ({ product, language }) => new Promise(resolve => {
   const helpCenterUrl = new URL(CREATE_HELP_CENTER_URL(product.code))
   const crawler = Crawler(helpCenterUrl.toString() + `?hl=${language}`)
@@ -17,7 +25,7 @@ const crawlProduct = ({ product, language }) => new Promise(resolve => {
   crawler.on('crawlstart', () => {
     debug({
       status: 'debug',
-      message: `Start crawling answers for ${product.name} in ${language}`
+      message: `Start crawling answers for ${product.name} in ${language.toUpperCase()}`
     })
   })
 
@@ -54,9 +62,37 @@ const crawlProduct = ({ product, language }) => new Promise(resolve => {
     const title = $('h1').text() || ''
     const description = $('meta[name=description]').attr('content') || ''
     const uuid = getUuid(queueItem.url)
-    if (isNaN(uuid) || !title) return
-    else if ($('body').find('.guide-button').length > 0) return // avoid https://support.google.com/chrome/a/answer/9270224
-    else if (!queueItem.url.includes('/answer/') && !queueItem.url.includes('/troubleshooter/')) return
+
+    if (!queueItem.url.includes('/answer/') && !queueItem.url.includes('/troubleshooter/')) {
+      // e.g https://support.google.com/youtube/topic/9257108
+      return
+    }
+
+    if (isNaN(uuid) || !title) {
+      debug({
+        status: 'warn',
+        message: `URL [${queueItem.url}] is not a valid answer`
+      })
+      return
+    }
+
+    if (isGuideSteps($)) {
+      // e.g https://support.google.com/chrome/a/answer/9270224
+      debug({
+        status: 'warn',
+        message: `${queueItem.url} is a guide with multiples steps`
+      })
+      return
+    }
+
+    if (isDifferentLanguage($, language)) {
+      // e.g https://support.google.com/youtube/answer/9891124?hl=fr
+      debug({
+        status: 'warn',
+        message: `Answer [${uuid}] for ${product.name} has not been translated in ${language.toUpperCase()}`
+      })
+      return
+    }
 
     const topic = {
       title,
@@ -94,7 +130,7 @@ const crawlProduct = ({ product, language }) => new Promise(resolve => {
 
   crawler.on('fetch410', (queueItem, response) => {
     debug({
-      status: 'warn',
+      status: 'error',
       message: `Status 410 on [${queueItem.url}]: ${response.statusMessage}`
     })
   })
