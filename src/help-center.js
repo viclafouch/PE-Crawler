@@ -5,11 +5,12 @@ import { getUuid, isUrl, log, relativePath } from './shared/helpers'
 
 const debug = (args) => log({ ...args, message: `[ANSWER]: ${args.message}` })
 
-const CREATE_HELP_CENTER_URL = (productCode) => `https://support.google.com/${productCode}`
+const CREATE_HELP_CENTER_URL = (productCode) => `https://support.google.com/${productCode}/`
 const DIR_ANSWERS = jetpack.dir('answers')
 
 const isDifferentLanguage = ($, language) => {
-  return language !== $('html').attr('lang')
+  // e.g: For pt-BR, lang is pt
+  return !language.startsWith($('html').attr('lang'))
 }
 
 const isGuideSteps = ($) => {
@@ -124,7 +125,7 @@ const crawlProduct = ({ product, language }) => new Promise(resolve => {
   crawler.on('fetch404', (queueItem, response) => {
     debug({
       status: 'error',
-      message: `Status 404 on [${queueItem.url}]: ${response.statusMessage}`
+      message: `Status 404 on [${queueItem.url}]: ${response.statusMessage} ${queueItem.referrer}`
     })
   })
 
