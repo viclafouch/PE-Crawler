@@ -1,6 +1,6 @@
 import './shared/console'
 import colors from 'colors'
-import server from './server'
+import server, { port } from './server'
 import { crawlCommunities } from './community'
 import { crawlAnswers } from './help-center'
 import { LANGUAGES, PRODUCTS } from './shared/constants'
@@ -12,7 +12,7 @@ async function recursion (fn) {
   return recursion(fn)
 }
 
-server.listen(3000, async () => {
+server.listen(port, async () => {
   console.log(colors.debug('Server opened'))
 
   const products = await PRODUCTS

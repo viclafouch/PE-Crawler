@@ -1,5 +1,7 @@
 import express from 'express'
 
+export const port = process.env.PORT || 3000
+
 const app = express()
 
 app.use('/threads', express.static('threads'))
