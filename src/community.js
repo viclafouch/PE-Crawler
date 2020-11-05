@@ -60,6 +60,10 @@ export const crawlCommunities = ({ products, languages }) => new Promise(resolve
     })
   })
 
+  crawler.addFetchCondition((queueItem, referrerQueueItem) => {
+    return !queueItem.url.startsWith('https://support.google.com/threads') // Avoid fetch redirection 404
+  })
+
   crawler.on('fetcherror', (queueItem, response) => {
     debug({
       status: 'error',
