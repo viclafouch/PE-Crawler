@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate (models) {
-      // define association here
+      models.Language.hasMany(models.Thread)
     }
   };
   Language.init({
@@ -25,5 +25,6 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: false,
     modelName: 'Language'
   })
+
   return Language
 }

@@ -1,4 +1,3 @@
-import jetpack from 'fs-jetpack'
 import cheerio from 'cheerio'
 import Crawler from 'simplecrawler'
 import { log } from './shared/helpers'
@@ -7,7 +6,6 @@ import database from '../db/models'
 const debug = (args) => log({ ...args, message: `[THREADS]: ${args.message}` })
 
 const CREATE_THREADS_URL = (productCode) => `https://support.google.com/${productCode}/threads`
-const DIR_THREADS = jetpack.dir('threads')
 let crawler
 
 export const crawlCommunities = ({ products, languages }) => new Promise(resolve => {
@@ -26,15 +24,15 @@ export const crawlCommunities = ({ products, languages }) => new Promise(resolve
     }
   }
 
-  crawler.on('fetchcomplete', async (queueItem, buffer) => {
+  crawler.on('fetchcomplete', async function (queueItem, buffer) {
     const $ = cheerio.load(buffer.toString('utf8'))
     const listThreadsItems = $('a.thread-list-thread')
     const threads = listThreadsItems.map((i, e) => {
-      const id = $(e).attr('data-stats-id')
+      const uuid = $(e).attr('data-stats-id')
       const title = $(e).find('.thread-list-thread__title')
       const description = $(e).find('.thread-list-thread__snippet')
       return {
-        id,
+        uuid,
         title: title.text().trim(),
         description: description.text().trim()
       }
@@ -42,13 +40,28 @@ export const crawlCommunities = ({ products, languages }) => new Promise(resolve
     const productCode = queueItem.uriPath.split('/')[1]
     const product = await database.Product.findOne({ where: { code: productCode } })
     const languageCode = (new URL(queueItem.url)).searchParams.get('hl')
-    const PRODUCT_DIR = DIR_THREADS.dir(productCode)
-    const data = { 'last-update': new Date(), name: product.name, lang: languageCode, threads }
+    const language = await database.Language.findOne({ where: { code: languageCode } })
+    await database.Thread.destroy({
+      where: {
+        LanguageId: language.id,
+        ProductId: product.id
+      }
+    })
+    const promises = []
+    for (const thread of threads) {
+      promises.push(database.Thread.create({
+        uuid: thread.uuid,
+        title: thread.title,
+        description: thread.description,
+        LanguageId: language.id,
+        ProductId: product.id
+      }))
+    }
+    const threadsAdded = (await Promise.allSettled(promises)).filter(p => p.status === 'fulfilled')
     debug({
       status: 'success',
-      message: `[${product.name}/${languageCode}]: ${threads.length} threads`
+      message: `[${product.name}/${language.code}]: ${threadsAdded.length} threads added`
     })
-    PRODUCT_DIR.write(`${languageCode}.json`, data, { jsonIndent: 2 })
   })
 
   crawler.on('fetchredirect', async (queueItem, buffer) => {

@@ -10,7 +10,8 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate (models) {
-      // define association here
+      models.Thread.belongsTo(models.Product)
+      models.Thread.belongsTo(models.Language)
     }
   };
   Thread.init({
@@ -30,10 +31,6 @@ module.exports = (sequelize, DataTypes) => {
     description: {
       type: DataTypes.STRING(1000),
       allowNull: true
-    },
-    lang: {
-      type: DataTypes.STRING,
-      allowNull: false
     }
   }, {
     sequelize,
