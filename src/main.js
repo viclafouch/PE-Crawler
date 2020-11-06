@@ -2,8 +2,8 @@ import './shared/console'
 import colors from 'colors'
 import server, { port } from './server'
 import { crawlCommunities } from './community'
-import { crawlAnswers } from './help-center'
-import { LANGUAGES, PRODUCTS } from './shared/constants'
+// import { crawlAnswers } from './help-center'
+import database from '../db/models'
 
 async function recursion (fn) {
   const args = arguments
@@ -13,11 +13,22 @@ async function recursion (fn) {
 }
 
 server.listen(port, async () => {
-  console.log(colors.debug('Server opened'))
+  try {
+    console.log(colors.debug('Server opened'))
+    await database.connectToDatabase()
+    console.log(colors.debug('Database connected'))
 
-  const products = await PRODUCTS
-  const languages = await LANGUAGES
+    await database.sequelize.sync()
 
-  recursion(() => crawlCommunities({ products, languages }))
-  recursion(() => crawlAnswers({ products, languages }))
+    recursion(async () => {
+      const products = await database.Product.findAll()
+      const languages = await database.Language.findAll()
+      await crawlCommunities({ products, languages })
+    })
+    // recursion(() => crawlAnswers({ products, languages }))
+  } catch (error) {
+    console.error(error)
+    server.close()
+    process.exit(0)
+  }
 })

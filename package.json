@@ -15,10 +15,13 @@
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "fs-jetpack": "^4.0.1",
-    "simplecrawler": "^1.1.9"
+    "sequelize": "^6.3.5",
+    "simplecrawler": "^1.1.9",
+    "sqlite3": "^5.0.0"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all && node index.js",
+    "dev": "node index.js",
     "lint:fix": "eslint . --fix"
   },
   "devDependencies": {

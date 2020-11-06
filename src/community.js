@@ -2,6 +2,7 @@ import jetpack from 'fs-jetpack'
 import cheerio from 'cheerio'
 import Crawler from 'simplecrawler'
 import { log } from './shared/helpers'
+import database from '../db/models'
 
 const debug = (args) => log({ ...args, message: `[THREADS]: ${args.message}` })
 
@@ -18,7 +19,7 @@ export const crawlCommunities = ({ products, languages }) => new Promise(resolve
   for (const product of products) {
     for (const language of languages) {
       const url = new URL(CREATE_THREADS_URL(product.code))
-      url.searchParams.set('hl', language)
+      url.searchParams.set('hl', language.code)
       url.searchParams.set('max_results', 60)
       if (!crawler) crawler = Crawler(url.toString())
       else crawler.queueURL(url.toString())
@@ -39,7 +40,7 @@ export const crawlCommunities = ({ products, languages }) => new Promise(resolve
       }
     }).get()
     const productCode = queueItem.uriPath.split('/')[1]
-    const product = products.find(({ code }) => code === productCode)
+    const product = await database.Product.findOne({ where: { code: productCode } })
     const languageCode = (new URL(queueItem.url)).searchParams.get('hl')
     const PRODUCT_DIR = DIR_THREADS.dir(productCode)
     const data = { 'last-update': new Date(), name: product.name, lang: languageCode, threads }
@@ -52,7 +53,7 @@ export const crawlCommunities = ({ products, languages }) => new Promise(resolve
 
   crawler.on('fetchredirect', async (queueItem, buffer) => {
     const productCode = queueItem.uriPath.split('/')[1]
-    const product = products.find(({ code }) => code === productCode)
+    const product = await database.Product.findOne({ where: { code: productCode } })
     const languageCode = (new URL(queueItem.url)).searchParams.get('hl')
     debug({
       status: 'warn',
