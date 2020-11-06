@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate (models) {
       models.Language.hasMany(models.Thread)
+      models.Language.hasMany(models.Answer)
     }
   };
   Language.init({

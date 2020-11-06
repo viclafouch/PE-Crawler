@@ -2,7 +2,7 @@ import './shared/console'
 import colors from 'colors'
 import server, { port } from './server'
 import { crawlCommunities } from './community'
-// import { crawlAnswers } from './help-center'
+import { crawlAnswers } from './help-center'
 import database from '../db/models'
 
 async function recursion (fn) {
@@ -25,7 +25,11 @@ server.listen(port, async () => {
       const languages = await database.Language.findAll()
       await crawlCommunities({ products, languages })
     })
-    // recursion(() => crawlAnswers({ products, languages }))
+    recursion(async () => {
+      const products = await database.Product.findAll()
+      const languages = await database.Language.findAll()
+      await crawlAnswers({ products, languages })
+    })
   } catch (error) {
     console.error(error)
     server.close()

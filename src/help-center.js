@@ -1,12 +1,11 @@
-import jetpack from 'fs-jetpack'
 import cheerio from 'cheerio'
 import Crawler from 'simplecrawler'
+import database from '../db/models'
 import { getUuid, isUrl, log, relativePath } from './shared/helpers'
 
 const debug = (args) => log({ ...args, message: `[ANSWER]: ${args.message}` })
 
 const CREATE_HELP_CENTER_URL = (productCode) => `https://support.google.com/${productCode}/`
-const DIR_ANSWERS = jetpack.dir('answers')
 
 const isDifferentLanguage = ($, language) => {
   // e.g: For pt-BR, lang is pt
@@ -19,14 +18,14 @@ const isGuideSteps = ($) => {
 
 const crawlProduct = ({ product, language }) => new Promise(resolve => {
   const helpCenterUrl = new URL(CREATE_HELP_CENTER_URL(product.code))
-  const crawler = Crawler(helpCenterUrl.toString() + `?hl=${language}`)
+  const crawler = Crawler(helpCenterUrl.toString() + `?hl=${language.code}`)
 
   const answers = []
 
   crawler.on('crawlstart', () => {
     debug({
       status: 'debug',
-      message: `Start crawling answers for ${product.name} in ${language.toUpperCase()}`
+      message: `Start crawling answers for ${product.name} in ${language.code.toUpperCase()}`
     })
   })
 
@@ -39,7 +38,7 @@ const crawlProduct = ({ product, language }) => new Promise(resolve => {
         const url = new URL(href)
         url.hash = ''
         url.search = ''
-        url.searchParams.set('hl', language)
+        url.searchParams.set('hl', language.code)
         return url.toString()
       }).get()
     return resources
@@ -86,25 +85,32 @@ const crawlProduct = ({ product, language }) => new Promise(resolve => {
       return
     }
 
-    if (isDifferentLanguage($, language)) {
+    if (isDifferentLanguage($, language.code)) {
       // e.g https://support.google.com/youtube/answer/9891124?hl=fr
       debug({
         status: 'warn',
-        message: `Answer [${uuid}] for ${product.name} has not been translated in ${language.toUpperCase()}`
+        message: `Answer [${uuid}] for ${product.name} has not been translated in ${language.code.toUpperCase()}`
       })
       return
     }
 
-    const topic = {
-      title,
-      description,
-      uuid
-    }
+    await updateOrCreate(database.Answer, { uuid }, {
+      title: title,
+      description: description,
+      uuid: uuid,
+      LanguageId: language.id,
+      ProductId: product.id
+    })
 
-    answers.push(topic)
+    const answersCount = await database.Answer.count({
+      where: {
+        LanguageId: language.id,
+        ProductId: product.id
+      }
+    })
     debug({
       status: 'success',
-      message: `[${product.name}/${language}][${answers.length}]: ${title}`
+      message: `[${product.name}/${language.code}][${answersCount}]: ${title}`
     })
   })
 
@@ -143,13 +149,22 @@ const crawlProduct = ({ product, language }) => new Promise(resolve => {
   crawler.start()
 })
 
+const updateOrCreate = async (model, where, newItem) => {
+  const findItem = await model.findOne({ where })
+  if (!findItem) {
+    const item = await model.create(newItem)
+    return { item, created: true }
+  } else {
+    await model.update(newItem, { where })
+    const item = await model.findOne({ where })
+    return { item, created: false }
+  }
+}
+
 export const crawlAnswers = async ({ products, languages }) => {
   for (const product of products) {
     for (const language of languages) {
       const answers = await crawlProduct({ product, language })
-      const data = { 'last-update': new Date(), name: product.name, lang: language, answers }
-      const PRODUCT_DIR = DIR_ANSWERS.dir(product.code)
-      PRODUCT_DIR.write(`${language}.json`, data, { jsonIndent: 2 })
       debug({
         status: 'debug',
         message: `${answers.length} crawled for ${product.name} in ${language}`

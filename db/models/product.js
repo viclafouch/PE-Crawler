@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate (models) {
       models.Product.hasMany(models.Thread)
+      models.Product.hasMany(models.Answer)
     }
   };
   Product.init({

@@ -14,7 +14,6 @@
     "colors": "^1.4.0",
     "esm": "^3.2.25",
     "express": "^4.17.1",
-    "fs-jetpack": "^4.0.1",
     "sequelize": "^6.3.5",
     "simplecrawler": "^1.1.9",
     "sqlite3": "^5.0.0"

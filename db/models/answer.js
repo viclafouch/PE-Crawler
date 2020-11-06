@@ -10,7 +10,8 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate (models) {
-      // define association here
+      models.Answer.belongsTo(models.Product)
+      models.Answer.belongsTo(models.Language)
     }
   };
   Answer.init({
@@ -30,13 +31,6 @@ module.exports = (sequelize, DataTypes) => {
     description: {
       type: DataTypes.STRING(1000),
       allowNull: true
-    },
-    url: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isUrl: true
-      }
     }
   }, {
     sequelize,
