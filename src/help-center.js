@@ -16,7 +16,7 @@ const isGuideSteps = ($) => {
   return $('body').find('.guide-button').length > 0
 }
 
-const crawlProduct = ({ product, language }) => new Promise(resolve => {
+const crawl = ({ product, language }) => new Promise(resolve => {
   const helpCenterUrl = new URL(CREATE_HELP_CENTER_URL(product.code))
   const crawler = Crawler(helpCenterUrl.toString() + `?hl=${language.code}`)
 
@@ -57,7 +57,7 @@ const crawlProduct = ({ product, language }) => new Promise(resolve => {
     return !queueItem.url.includes('visit_id')
   })
 
-  crawler.on('fetchcomplete', async (queueItem, buffer) => {
+  crawler.on('fetchcomplete', (queueItem, buffer) => {
     const $ = cheerio.load(buffer.toString('utf8'))
     const title = $('h1').text() || ''
     const description = $('meta[name=description]').attr('content') || ''
@@ -93,24 +93,10 @@ const crawlProduct = ({ product, language }) => new Promise(resolve => {
       })
       return
     }
-
-    await updateOrCreate(database.Answer, { uuid }, {
-      title: title,
-      description: description,
-      uuid: uuid,
-      LanguageId: language.id,
-      ProductId: product.id
-    })
-
-    const answersCount = await database.Answer.count({
-      where: {
-        LanguageId: language.id,
-        ProductId: product.id
-      }
-    })
+    answers.push({ title, description, uuid })
     debug({
       status: 'success',
-      message: `[${product.name}/${language.code}][${answersCount}]: ${title}`
+      message: `[${product.name}/${language.code}][${answers.length}]: ${title}`
     })
   })
 
@@ -141,7 +127,6 @@ const crawlProduct = ({ product, language }) => new Promise(resolve => {
       message: `Status 410 on [${queueItem.url}]: ${response.statusMessage}`
     })
   })
-
   crawler.on('complete', () => resolve(answers))
 
   crawler.maxConcurrency = 3
@@ -164,10 +149,29 @@ const updateOrCreate = async (model, where, newItem) => {
 export const crawlAnswers = async ({ products, languages }) => {
   for (const product of products) {
     for (const language of languages) {
-      const answers = await crawlProduct({ product, language })
+      const answers = await crawl({ product, language })
+      const promises = []
+      for (const answer of answers) {
+        promises.push(updateOrCreate(database.Answer, { uuid: answer.uuid }, {
+          title: answer.title,
+          description: answer.description,
+          uuid: answer.uuid,
+          LanguageId: language.id,
+          ProductId: product.id
+        }))
+      }
+      const answersFulfilled = (await Promise.allSettled(promises)).filter(p => p.status === 'fulfilled')
+      const answersAdded = answersFulfilled.reduce((previousValue, currentValue) => {
+        if (currentValue.created) previousValue++
+        return previousValue
+      }, 0)
       debug({
         status: 'debug',
-        message: `${answers.length} crawled for ${product.name} in ${language}`
+        message: `${answersAdded} answers added for ${product.name} in ${language.code}`
+      })
+      debug({
+        status: 'debug',
+        message: `${answersFulfilled.length - answersAdded} answers updated for ${product.name} in ${language.code}`
       })
     }
   }

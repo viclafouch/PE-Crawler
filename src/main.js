@@ -1,7 +1,7 @@
 import './shared/console'
 import colors from 'colors'
 import server, { port } from './server'
-import { crawlCommunities } from './community'
+import { crawlThreads } from './community'
 import { crawlAnswers } from './help-center'
 import database from '../db/models'
 
@@ -23,12 +23,12 @@ server.listen(port, async () => {
     recursion(async () => {
       const products = await database.Product.findAll()
       const languages = await database.Language.findAll()
-      await crawlCommunities({ products, languages })
+      await crawlAnswers({ products, languages })
     })
     recursion(async () => {
       const products = await database.Product.findAll()
       const languages = await database.Language.findAll()
-      await crawlAnswers({ products, languages })
+      await crawlThreads({ products, languages })
     })
   } catch (error) {
     console.error(error)

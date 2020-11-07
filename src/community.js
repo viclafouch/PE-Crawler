@@ -6,28 +6,18 @@ import database from '../db/models'
 const debug = (args) => log({ ...args, message: `[THREADS]: ${args.message}` })
 
 const CREATE_THREADS_URL = (productCode) => `https://support.google.com/${productCode}/threads`
-let crawler
 
-export const crawlCommunities = ({ products, languages }) => new Promise(resolve => {
-  if (crawler instanceof Crawler) {
-    crawler.stop(true)
-    crawler = null
-  }
-
-  for (const product of products) {
-    for (const language of languages) {
-      const url = new URL(CREATE_THREADS_URL(product.code))
-      url.searchParams.set('hl', language.code)
-      url.searchParams.set('max_results', 60)
-      if (!crawler) crawler = Crawler(url.toString())
-      else crawler.queueURL(url.toString())
-    }
-  }
+export const crawl = ({ product, language }) => new Promise(resolve => {
+  const url = new URL(CREATE_THREADS_URL(product.code))
+  url.searchParams.set('hl', language.code)
+  url.searchParams.set('max_results', 60)
+  const crawler = Crawler(url.toString())
+  let threads
 
   crawler.on('fetchcomplete', async function (queueItem, buffer) {
     const $ = cheerio.load(buffer.toString('utf8'))
     const listThreadsItems = $('a.thread-list-thread')
-    const threads = listThreadsItems.map((i, e) => {
+    threads = listThreadsItems.map((i, e) => {
       const uuid = $(e).attr('data-stats-id')
       const title = $(e).find('.thread-list-thread__title')
       const description = $(e).find('.thread-list-thread__snippet')
@@ -37,31 +27,6 @@ export const crawlCommunities = ({ products, languages }) => new Promise(resolve
         description: description.text().trim()
       }
     }).get()
-    const productCode = queueItem.uriPath.split('/')[1]
-    const product = await database.Product.findOne({ where: { code: productCode } })
-    const languageCode = (new URL(queueItem.url)).searchParams.get('hl')
-    const language = await database.Language.findOne({ where: { code: languageCode } })
-    await database.Thread.destroy({
-      where: {
-        LanguageId: language.id,
-        ProductId: product.id
-      }
-    })
-    const promises = []
-    for (const thread of threads) {
-      promises.push(database.Thread.create({
-        uuid: thread.uuid,
-        title: thread.title,
-        description: thread.description,
-        LanguageId: language.id,
-        ProductId: product.id
-      }))
-    }
-    const threadsAdded = (await Promise.allSettled(promises)).filter(p => p.status === 'fulfilled')
-    debug({
-      status: 'success',
-      message: `[${product.name}/${language.code}]: ${threadsAdded.length} threads added`
-    })
   })
 
   crawler.on('fetchredirect', async (queueItem, buffer) => {
@@ -106,9 +71,35 @@ export const crawlCommunities = ({ products, languages }) => new Promise(resolve
     })
   })
 
-  crawler.on('complete', resolve)
+  crawler.on('complete', () => resolve(threads))
 
   crawler.maxConcurrency = 3
   crawler.maxDepth = 1
   crawler.start()
 })
+
+export const crawlThreads = async ({ products, languages }) => {
+  for (const product of products) {
+    for (const language of languages) {
+      const threads = await crawl({ product, language })
+      await database.Thread.destroy({
+        where: {
+          LanguageId: language.id,
+          ProductId: product.id
+        }
+      })
+      const promises = threads.map(thread => database.Thread.create({
+        uuid: thread.uuid,
+        title: thread.title,
+        description: thread.description,
+        LanguageId: language.id,
+        ProductId: product.id
+      }))
+      const threadsAdded = (await Promise.allSettled(promises)).filter(p => p.status === 'fulfilled')
+      debug({
+        status: 'success',
+        message: `[${product.name}/${language.code}]: ${threadsAdded.length} threads added`
+      })
+    }
+  }
+}
