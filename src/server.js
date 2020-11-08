@@ -1,14 +1,26 @@
 import express from 'express'
+import cors from 'cors'
+import helmet from 'helmet'
+import router from './routes'
 
 export const port = process.env.PORT || 3000
 
-const app = express()
+class App {
+  constructor () {
+    this.app = express()
+    this.initializeMiddlewares()
+    this.initializeRoutes()
+  }
 
-app.use('/threads', express.static('threads'))
-app.use('/answers', express.static('answers'))
+  initializeMiddlewares () {
+    this.app.use(helmet())
+    this.app.use(express.json())
+    this.app.use(cors())
+  }
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+  initializeRoutes () {
+    this.app.use('/', router)
+  }
+}
 
-export default app
+export default new App().app

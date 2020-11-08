@@ -3,4 +3,5 @@
 /answers
 .vscode
 db.development.sqlite
+db.development.sqlite-journal
 .DS_Store
