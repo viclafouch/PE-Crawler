@@ -1,8 +1,0 @@
-{
-  "development": {
-    "dialect": "sqlite",
-    "host": "localhost",
-    "storage": "./db.development.sqlite",
-    "database": "database_development"
-  }
-}

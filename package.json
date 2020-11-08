@@ -15,17 +15,19 @@
     "cheerio": "^1.0.0-rc.3",
     "colors": "^1.4.0",
     "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "express-async-handler": "^1.1.4",
     "express-validator": "^6.6.1",
     "helmet": "^4.2.0",
+    "pg": "^8.4.2",
     "sequelize": "^6.3.5",
     "simplecrawler": "^1.1.9",
     "sqlite3": "^5.0.0"
   },
   "scripts": {
-    "start": "npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all && node index.js",
+    "start": "npx cross-env NODE_ENV=production node index.js",
     "dev": "node index.js",
     "lint:fix": "eslint . --fix"
   },

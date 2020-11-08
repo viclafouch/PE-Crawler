@@ -13,7 +13,7 @@ async function recursion (fn) {
   return recursion(fn)
 }
 
-server.listen(port, async () => {
+const listener = server.listen(port, async () => {
   try {
     log({ status: 'debug', message: 'Server opened' })
     await database.connectToDatabase()
@@ -47,7 +47,7 @@ server.listen(port, async () => {
     })
   } catch (error) {
     console.error(error)
-    server.close()
+    listener.close()
     process.exit(0)
   }
 })
