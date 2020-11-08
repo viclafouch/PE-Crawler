@@ -14,6 +14,7 @@ if (config.use_env_variable) {
 } else {
   sequelize = new Sequelize(config.database, config.username, config.password, config)
 }
+sequelize.options.logging = false
 
 fs
   .readdirSync(__dirname)

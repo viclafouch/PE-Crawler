@@ -1,5 +1,5 @@
 {
-  "name": "google-support-crawler",
+  "name": "pe-crawler",
   "version": "2.0.0",
   "description": "",
   "main": "index.js",
@@ -10,12 +10,14 @@
   "author": "Victor de la Fouchardiere",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.19.0",
+    "@sentry/node": "^5.27.3",
+    "@sentry/tracing": "^5.27.3",
     "cheerio": "^1.0.0-rc.3",
     "colors": "^1.4.0",
     "cors": "^2.8.5",
     "esm": "^3.2.25",
     "express": "^4.17.1",
+    "express-async-handler": "^1.1.4",
     "express-validator": "^6.6.1",
     "helmet": "^4.2.0",
     "sequelize": "^6.3.5",

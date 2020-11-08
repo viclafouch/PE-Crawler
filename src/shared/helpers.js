@@ -6,6 +6,8 @@ export const isUrl = string => {
   return regexp.test(string)
 }
 
+export const wait = (amount = 1000) => new Promise(resolve => setTimeout(resolve, amount))
+
 export const relativePath = (hrefAbsolute, currentLink) => {
   try {
     return new URL(hrefAbsolute, currentLink).href

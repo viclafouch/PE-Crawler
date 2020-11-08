@@ -1,5 +1,6 @@
 import express from 'express'
 import { query, param } from 'express-validator'
+import asyncHandler from 'express-async-handler'
 import { validate } from '../shared/helpers'
 import { Op } from 'sequelize'
 import database from '../../db/models'
@@ -19,7 +20,7 @@ const validator = () => validate([
   param('product_code').isString()
 ])
 
-router.get('/:product_code', validator(), async (req, res) => {
+router.get('/:product_code', validator(), asyncHandler(async (req, res) => {
   const { hl: locale, page = 1, search } = req.query
   const { product_code: productCode } = req.params
   const product = await database.Product.findOne({ where: { code: productCode } })
@@ -45,6 +46,6 @@ router.get('/:product_code', validator(), async (req, res) => {
     product_name: product.name,
     answers: answers
   })
-})
+}))
 
 export default router

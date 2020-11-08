@@ -1,9 +1,10 @@
+import './sentry'
 import './shared/console'
-import colors from 'colors'
 import server, { port } from './server'
 import { crawlThreads } from './community'
 import { crawlAnswers } from './help-center'
 import database from '../db/models'
+import { log, wait } from './shared/helpers'
 
 async function recursion (fn) {
   const args = arguments
@@ -14,21 +15,35 @@ async function recursion (fn) {
 
 server.listen(port, async () => {
   try {
-    console.log(colors.debug('Server opened'))
+    log({ status: 'debug', message: 'Server opened' })
     await database.connectToDatabase()
-    console.log(colors.debug('Database connected'))
+    log({ status: 'debug', message: 'Database connected' })
 
     await database.sequelize.sync()
 
     recursion(async () => {
-      const products = await database.Product.findAll()
-      const languages = await database.Language.findAll()
-      await crawlAnswers({ products, languages })
+      try {
+        const products = await database.Product.findAll()
+        const languages = await database.Language.findAll()
+        await crawlAnswers({ products, languages })
+      } catch (error) {
+        console.error(error)
+        global.Sentry.captureException(error)
+        log({ status: 'error', message: 'Restart answers crawler in 5min' })
+        await wait(1000 * 60 * 5)
+      }
     })
     recursion(async () => {
-      const products = await database.Product.findAll()
-      const languages = await database.Language.findAll()
-      await crawlThreads({ products, languages })
+      try {
+        const products = await database.Product.findAll()
+        const languages = await database.Language.findAll()
+        await crawlThreads({ products, languages })
+      } catch (error) {
+        console.error(error)
+        global.Sentry.captureException(error)
+        log({ status: 'error', message: 'Restart threads crawler in 5min' })
+        await wait(1000 * 60 * 5)
+      }
     })
   } catch (error) {
     console.error(error)
