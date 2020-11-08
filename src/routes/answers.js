@@ -1,6 +1,7 @@
 import express from 'express'
 import { query, param } from 'express-validator'
 import { validate } from '../shared/helpers'
+import { Op } from 'sequelize'
 import database from '../../db/models'
 
 const router = express.Router()
@@ -13,11 +14,13 @@ export const isValidLocale = async (locale) => {
 
 const validator = () => validate([
   query('hl').isLocale().custom(isValidLocale),
+  query('page').optional().isNumeric().toInt(),
+  query('search').optional().isString(),
   param('product_code').isString()
 ])
 
 router.get('/:product_code', validator(), async (req, res) => {
-  const { hl: locale } = req.query
+  const { hl: locale, page = 1, search } = req.query
   const { product_code: productCode } = req.params
   const product = await database.Product.findOne({ where: { code: productCode } })
 
@@ -25,19 +28,22 @@ router.get('/:product_code', validator(), async (req, res) => {
 
   const { id: languageId } = await database.Language.findOne({ where: { code: locale } })
 
-  const threads = await database.Thread.findAll({
-    where: {
-      LanguageId: languageId,
-      ProductId: product.id
-    }
-  })
-  const firstThread = threads.length > 0 ? threads[0] : null
+  const where = {
+    LanguageId: languageId,
+    ProductId: product.id,
+    ...search ? { title: { [Op.like]: `%${search}%` } } : null
+  }
+  const limit = 10
+  const count = await database.Answer.count({ where })
+  const offset = limit * (page - 1)
+
+  const answers = await database.Answer.findAll({ limit, where, offset })
 
   res.status(200).json({
-    last_update: firstThread ? firstThread.createdAt : new Date(),
+    nb_pages: Math.ceil(count / limit),
     locale: locale,
     product_name: product.name,
-    threads: threads
+    answers: answers
   })
 })
 
