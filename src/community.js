@@ -74,7 +74,6 @@ export const crawl = ({ product, language }) => new Promise(resolve => {
 
   crawler.on('complete', () => resolve(threads))
 
-  crawler.maxConcurrency = 3
   crawler.maxDepth = 1
   crawler.start()
 })
@@ -96,10 +95,12 @@ export const crawlThreads = async ({ products, languages }) => {
         LanguageId: language.id,
         ProductId: product.id
       }))
-      const threadsAdded = (await Promise.allSettled(promises)).filter(p => p.status === 'fulfilled')
-      debug({
-        status: 'success',
-        message: `[${product.name}/${language.code}]: ${threadsAdded.length} threads added`
+      // Don't need to wait for adding threads
+      Promise.all(promises).then(threadsAdded => {
+        debug({
+          status: 'success',
+          message: `[${product.name}/${language.code}]: ${threadsAdded.length} threads added`
+        })
       })
     }
   }

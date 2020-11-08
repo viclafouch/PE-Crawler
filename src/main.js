@@ -38,6 +38,7 @@ const listener = server.listen(port, async () => {
         await wait(1000 * 60 * 5)
       }
     })
+
     recursion(async () => {
       try {
         const products = await database.Product.findAll()
