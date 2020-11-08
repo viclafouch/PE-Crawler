@@ -12,7 +12,8 @@ export const crawl = ({ product, language }) => new Promise(resolve => {
   url.searchParams.set('hl', language.code)
   url.searchParams.set('max_results', 60)
   const crawler = Crawler(url.toString())
-  let threads
+  global.crawler_community = crawler
+  let threads = []
 
   crawler.on('fetchcomplete', async function (queueItem, buffer) {
     const $ = cheerio.load(buffer.toString('utf8'))

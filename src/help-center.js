@@ -19,6 +19,7 @@ const isGuideSteps = ($) => {
 const crawl = ({ product, language }) => new Promise(resolve => {
   const helpCenterUrl = new URL(CREATE_HELP_CENTER_URL(product.code))
   const crawler = Crawler(helpCenterUrl.toString() + `?hl=${language.code}`)
+  global.crawler_threads = crawler
 
   const answers = []
 

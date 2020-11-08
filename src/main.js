@@ -1,5 +1,6 @@
 import './sentry'
 import './shared/console'
+import Crawler from 'simplecrawler'
 import server, { port } from './server'
 import { crawlThreads } from './community'
 import { crawlAnswers } from './help-center'
@@ -29,6 +30,10 @@ const listener = server.listen(port, async () => {
       } catch (error) {
         console.error(error)
         global.Sentry.captureException(error)
+        if (global.crawler_community instanceof Crawler) {
+          global.crawler_community.stop()
+          global.crawler_community = null
+        }
         log({ status: 'error', message: 'Restart answers crawler in 5min' })
         await wait(1000 * 60 * 5)
       }
@@ -41,6 +46,10 @@ const listener = server.listen(port, async () => {
       } catch (error) {
         console.error(error)
         global.Sentry.captureException(error)
+        if (global.crawler_threads instanceof Crawler) {
+          global.crawler_threads.stop()
+          global.crawler_threads = null
+        }
         log({ status: 'error', message: 'Restart threads crawler in 5min' })
         await wait(1000 * 60 * 5)
       }
