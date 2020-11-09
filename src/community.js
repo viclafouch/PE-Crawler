@@ -20,12 +20,12 @@ export const crawl = ({ product, language }) => new Promise(resolve => {
     const listThreadsItems = $('a.thread-list-thread')
     threads = listThreadsItems.map((i, e) => {
       const uuid = $(e).attr('data-stats-id')
-      const title = $(e).find('.thread-list-thread__title').substring(0, 200)
-      const description = $(e).find('.thread-list-thread__snippet').substring(0, 200)
+      const title = $(e).find('.thread-list-thread__title')
+      const description = $(e).find('.thread-list-thread__snippet')
       return database.Thread.build({
         uuid: uuid,
-        title: title.text().trim(),
-        description: description.text().trim(),
+        title: title.text().trim().substring(0, 200),
+        description: description.text().trim().substring(0, 200),
         LanguageId: language.id,
         ProductId: product.id
       })

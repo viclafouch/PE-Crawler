@@ -61,8 +61,8 @@ const crawl = ({ product, language }) => new Promise(resolve => {
 
   crawler.on('fetchcomplete', (queueItem, buffer) => {
     const $ = cheerio.load(buffer.toString('utf8'))
-    const title = $('h1').text().substring(0, 200) || ''
-    const description = $('meta[name=description]').attr('content').substring(0, 200) || ''
+    const title = (($('h1').text()) || '').substring(0, 200)
+    const description = ($('meta[name=description]').attr('content') || '').substring(0, 200)
     const uuid = getUuid(queueItem.url)
 
     if (!queueItem.url.includes('/answer/') && !queueItem.url.includes('/troubleshooter/')) {
