@@ -11,7 +11,7 @@ module.exports = {
     storage: ':memory:'
   },
   production: {
-    url: process.env.DATABASE_URL,
+    url: process.env.HEROKU_POSTGRESQL_GRAY_URL,
     dialect: 'postgres',
     logging: false,
     dialectOptions: {
