@@ -20,6 +20,17 @@ const validator = () => validate([
   param('product_code').isString()
 ])
 
+router.get('/', asyncHandler(async (req, res) => {
+  const nbAnswers = await database.Answer.count()
+  const languages = await database.Language.findAll({ attributes: ['code'] })
+  const products = await database.Product.findAll({ attributes: ['name'] })
+  res.status(200).json({
+    nbAnswers: nbAnswers,
+    locales: languages.map(l => l.code),
+    productNames: products.map(p => p.name)
+  })
+}))
+
 router.get('/:product_code', validator(), asyncHandler(async (req, res) => {
   const { hl: locale, page = 1, search } = req.query
   const { product_code: productCode } = req.params
@@ -41,10 +52,10 @@ router.get('/:product_code', validator(), asyncHandler(async (req, res) => {
   const answers = await database.Answer.findAll({ limit, where, offset })
 
   res.status(200).json({
-    nb_pages: Math.ceil(count / limit),
+    nbPages: Math.ceil(count / limit),
     page: page,
     locale: locale,
-    product_name: product.name,
+    productName: product.name,
     answers: answers
   })
 }))

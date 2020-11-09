@@ -20,8 +20,8 @@ export const crawl = ({ product, language }) => new Promise(resolve => {
     const listThreadsItems = $('a.thread-list-thread')
     threads = listThreadsItems.map((i, e) => {
       const uuid = $(e).attr('data-stats-id')
-      const title = $(e).find('.thread-list-thread__title')
-      const description = $(e).find('.thread-list-thread__snippet')
+      const title = $(e).find('.thread-list-thread__title').substring(0, 200)
+      const description = $(e).find('.thread-list-thread__snippet').substring(0, 200)
       return database.Thread.build({
         uuid: uuid,
         title: title.text().trim(),
@@ -90,14 +90,23 @@ export const crawlThreads = async ({ products, languages }) => {
           ProductId: product.id
         }
       })
-      const promises = threads.map(thread => thread.save())
-      // Don't need to wait for adding threads
-      Promise.all(promises).then(threadsAdded => {
+      const saveThreads = async () => {
+        for (const thread of threads) {
+          try {
+            await thread.save()
+          } catch (error) {
+            global.Sentry.captureException(error)
+            console.error(error)
+          }
+        }
         debug({
           status: 'success',
-          message: `[${product.name}/${language.code}]: ${threadsAdded.length} threads added`
+          message: `[${product.name}/${language.code}]: ${threads.length} threads added`
         })
-      })
+      }
+
+      // Don't need to wait for adding threads
+      saveThreads()
     }
   }
 }

@@ -61,8 +61,8 @@ const crawl = ({ product, language }) => new Promise(resolve => {
 
   crawler.on('fetchcomplete', (queueItem, buffer) => {
     const $ = cheerio.load(buffer.toString('utf8'))
-    const title = $('h1').text() || ''
-    const description = $('meta[name=description]').attr('content') || ''
+    const title = $('h1').text().substring(0, 200) || ''
+    const description = $('meta[name=description]').attr('content').substring(0, 200) || ''
     const uuid = getUuid(queueItem.url)
 
     if (!queueItem.url.includes('/answer/') && !queueItem.url.includes('/troubleshooter/')) {
@@ -95,7 +95,13 @@ const crawl = ({ product, language }) => new Promise(resolve => {
       })
       return
     }
-    answers.push({ title, description, uuid })
+    answers.push({
+      title,
+      description,
+      uuid,
+      LanguageId: language.id,
+      ProductId: product.id
+    })
     debug({
       status: 'success',
       message: `[${product.name}/${language.code}][${answers.length}]: ${title}`
@@ -136,39 +142,43 @@ const crawl = ({ product, language }) => new Promise(resolve => {
   crawler.start()
 })
 
-const updateOrCreate = async (model, where, newItem) => {
-  const findItem = await model.findOne({ where })
-  if (!findItem) {
-    const item = await model.create(newItem)
-    return { item, created: true }
-  } else {
-    await model.update(newItem, { where })
-    const item = await model.findOne({ where })
-    return { item, created: false }
-  }
-}
-
 export const crawlAnswers = async ({ products, languages }) => {
   for (const product of products) {
     for (const language of languages) {
       const answers = await crawl({ product, language })
-      const promises = []
-      for (const answer of answers) {
-        promises.push(updateOrCreate(database.Answer, { uuid: answer.uuid }, {
-          title: answer.title,
-          description: answer.description,
-          uuid: answer.uuid,
-          LanguageId: language.id,
-          ProductId: product.id
-        }))
+
+      const saveAnswers = async () => {
+        let nbAdded = 0
+        for (const answer of answers) {
+          try {
+            const [item, created] = await database.Answer.findOrCreate({
+              where: {
+                uuid: answer.uuid,
+                LanguageId: answer.LanguageId,
+                ProductId: answer.ProductId
+              },
+              defaults: answer
+            })
+            if (!created) {
+              await database.Answer.update(item, {
+                where: {
+                  uuid: answer.uuid,
+                  LanguageId: answer.LanguageId,
+                  ProductId: answer.ProductId
+                }
+              })
+            } else nbAdded++
+          } catch (error) {
+            global.Sentry.captureException(error)
+            console.error(error)
+          }
+        }
+        log({ status: 'debug', message: `[ANSWER]: ${nbAdded} answers added for ${product.name} in ${language.code}` })
+        log({ status: 'debug', message: `[ANSWER]: ${answers.length - nbAdded} answers updated for ${product.name} in ${language.code}` })
       }
-      const answersUpdatedOrCreated = await Promise.all(promises)
-      const answersAdded = answersUpdatedOrCreated.reduce((previousValue, currentValue) => {
-        if (currentValue.created) previousValue++
-        return previousValue
-      }, 0)
-      log({ status: 'debug', message: `[ANSWER]: ${answersAdded} answers added for ${product.name} in ${language.code}` })
-      log({ status: 'debug', message: `[ANSWER]: ${answersUpdatedOrCreated.length - answersAdded} answers updated for ${product.name} in ${language.code}` })
+
+      // Don't need to wait for adding threads
+      saveAnswers()
     }
   }
 }

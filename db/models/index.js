@@ -6,16 +6,33 @@ const Sequelize = require('sequelize')
 const basename = path.basename(__filename)
 const env = process.env.NODE_ENV || 'development'
 const config = require(path.join(__dirname, '/../../config/database.js'))[env]
-console.log(config)
+
 const db = {}
 
 let sequelize
-if (config.url) {
-  sequelize = new Sequelize(config.url, config)
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config)
+
+const advancedConfig = {
+  retry: {
+    match: [
+      /SQLITE_BUSY/
+    ],
+    name: 'query',
+    max: 5
+  },
+  logging: false,
+  transactionType: 'IMMEDIATE'
 }
-sequelize.options.logging = false
+
+console.log({
+  database_config: { ...config, ...advancedConfig },
+  env: env
+})
+
+if (config.url) {
+  sequelize = new Sequelize(config.url, { ...config, ...advancedConfig })
+} else {
+  sequelize = new Sequelize(config.database, config.username, config.password, { ...config, ...advancedConfig })
+}
 
 fs
   .readdirSync(__dirname)

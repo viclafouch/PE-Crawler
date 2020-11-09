@@ -17,6 +17,17 @@ const validator = () => validate([
   param('product_code').isString()
 ])
 
+router.get('/', asyncHandler(async (req, res) => {
+  const nbThreads = await database.Thread.count()
+  const languages = await database.Language.findAll({ attributes: ['code'] })
+  const products = await database.Product.findAll({ attributes: ['name'] })
+  res.status(200).json({
+    nbThreads: nbThreads,
+    locales: languages.map(l => l.code),
+    productNames: products.map(p => p.name)
+  })
+}))
+
 router.get('/:product_code', validator(), asyncHandler(async (req, res) => {
   const { hl: locale } = req.query
   const { product_code: productCode } = req.params
