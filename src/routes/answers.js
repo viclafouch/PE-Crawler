@@ -32,7 +32,7 @@ router.get('/:product_code', validator(), asyncHandler(async (req, res) => {
   const where = {
     LanguageId: languageId,
     ProductId: product.id,
-    ...search ? { title: { [Op.like]: `%${search}%` } } : null
+    ...(search ? { title: { [Op.like]: `%${search}%` } } : null)
   }
   const limit = 10
   const count = await database.Answer.count({ where })
@@ -42,6 +42,7 @@ router.get('/:product_code', validator(), asyncHandler(async (req, res) => {
 
   res.status(200).json({
     nb_pages: Math.ceil(count / limit),
+    page: page,
     locale: locale,
     product_name: product.name,
     answers: answers

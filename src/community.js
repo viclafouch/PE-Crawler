@@ -22,11 +22,13 @@ export const crawl = ({ product, language }) => new Promise(resolve => {
       const uuid = $(e).attr('data-stats-id')
       const title = $(e).find('.thread-list-thread__title')
       const description = $(e).find('.thread-list-thread__snippet')
-      return {
-        uuid,
+      return database.Thread.build({
+        uuid: uuid,
         title: title.text().trim(),
-        description: description.text().trim()
-      }
+        description: description.text().trim(),
+        LanguageId: language.id,
+        ProductId: product.id
+      })
     }).get()
   })
 
@@ -88,13 +90,7 @@ export const crawlThreads = async ({ products, languages }) => {
           ProductId: product.id
         }
       })
-      const promises = threads.map(thread => database.Thread.create({
-        uuid: thread.uuid,
-        title: thread.title,
-        description: thread.description,
-        LanguageId: language.id,
-        ProductId: product.id
-      }))
+      const promises = threads.map(thread => thread.save())
       // Don't need to wait for adding threads
       Promise.all(promises).then(threadsAdded => {
         debug({

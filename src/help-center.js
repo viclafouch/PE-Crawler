@@ -1,9 +1,10 @@
 import cheerio from 'cheerio'
 import Crawler from 'simplecrawler'
 import database from '../db/models'
+import { IS_DEV } from './shared/constants'
 import { getUuid, isUrl, log, relativePath } from './shared/helpers'
 
-const debug = (args) => log({ ...args, message: `[ANSWER]: ${args.message}` })
+const debug = (args) => IS_DEV && log({ ...args, message: `[ANSWER]: ${args.message}` })
 
 const CREATE_HELP_CENTER_URL = (productCode) => `https://support.google.com/${productCode}/`
 
@@ -24,7 +25,7 @@ const crawl = ({ product, language }) => new Promise(resolve => {
   const answers = []
 
   crawler.on('crawlstart', () => {
-    debug({
+    log({
       status: 'debug',
       message: `Start crawling answers for ${product.name} in ${language.code.toUpperCase()}`
     })
@@ -161,19 +162,13 @@ export const crawlAnswers = async ({ products, languages }) => {
           ProductId: product.id
         }))
       }
-      const answersFulfilled = (await Promise.allSettled(promises)).filter(p => p.status === 'fulfilled')
-      const answersAdded = answersFulfilled.reduce((previousValue, currentValue) => {
+      const answersUpdatedOrCreated = await Promise.all(promises)
+      const answersAdded = answersUpdatedOrCreated.reduce((previousValue, currentValue) => {
         if (currentValue.created) previousValue++
         return previousValue
       }, 0)
-      debug({
-        status: 'debug',
-        message: `${answersAdded} answers added for ${product.name} in ${language.code}`
-      })
-      debug({
-        status: 'debug',
-        message: `${answersFulfilled.length - answersAdded} answers updated for ${product.name} in ${language.code}`
-      })
+      log({ status: 'debug', message: `[ANSWER]: ${answersAdded} answers added for ${product.name} in ${language.code}` })
+      log({ status: 'debug', message: `[ANSWER]: ${answersUpdatedOrCreated.length - answersAdded} answers updated for ${product.name} in ${language.code}` })
     }
   }
 }
