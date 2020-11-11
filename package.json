@@ -25,6 +25,7 @@
     "express-async-handler": "^1.1.4",
     "express-validator": "^6.6.1",
     "helmet": "^4.2.0",
+    "husky": "^4.3.0",
     "mocha": "^8.2.1",
     "pg": "^8.4.2",
     "randomstring": "^1.1.5",
@@ -37,12 +38,19 @@
     "start": "npx cross-env NODE_ENV=production node index.js",
     "test": "npx cross-env NODE_ENV=test ./node_modules/.bin/mocha test/*.spec.js -r esm",
     "dev": "node index.js",
+    "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
   "standard": {
     "env": [
       "mocha"
     ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint",
+      "pre-push": "npm run test"
+    }
   },
   "devDependencies": {
     "eslint": "^7.13.0",
