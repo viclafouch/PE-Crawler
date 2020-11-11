@@ -22,9 +22,9 @@ router.get('/', asyncHandler(async (req, res) => {
   const languages = await database.Language.findAll({ attributes: ['code'] })
   const products = await database.Product.findAll({ attributes: ['name'] })
   res.status(200).json({
-    nbThreads: nbThreads,
+    nb_threads: nbThreads,
     locales: languages.map(l => l.code),
-    productNames: products.map(p => p.name)
+    product_names: products.map(p => p.name)
   })
 }))
 

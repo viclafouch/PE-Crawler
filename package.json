@@ -25,19 +25,29 @@
     "express-async-handler": "^1.1.4",
     "express-validator": "^6.6.1",
     "helmet": "^4.2.0",
+    "mocha": "^8.2.1",
     "pg": "^8.4.2",
+    "randomstring": "^1.1.5",
     "sequelize": "^6.3.5",
     "simplecrawler": "^1.1.9",
-    "sqlite3": "^5.0.0"
+    "sqlite3": "^5.0.0",
+    "supertest": "^6.0.1"
   },
   "scripts": {
     "start": "npx cross-env NODE_ENV=production node index.js",
+    "test": "npx cross-env NODE_ENV=test ./node_modules/.bin/mocha test/*.spec.js -r esm",
     "dev": "node index.js",
     "lint:fix": "eslint . --fix"
+  },
+  "standard": {
+    "env": [
+      "mocha"
+    ]
   },
   "devDependencies": {
     "eslint": "^7.13.0",
     "eslint-config-standard": "^16.0.1",
+    "eslint-plugin-mocha": "^8.0.0",
     "standard": "^16.0.1"
   }
 }

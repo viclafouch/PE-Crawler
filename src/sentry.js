@@ -11,6 +11,7 @@ global.initSentry = (app) => Sentry.init({
   ],
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control
+  environment: process.env.NODE_ENV || 'development',
   tracesSampleRate: 1.0
 })
 
