@@ -1,5 +1,5 @@
 import database from '../db/models'
-import { createFakeAnswers, createLanguage, createProduct, isValidDate } from './utils'
+import { createFakeAnswers, createFakeThreads, createLanguage, createProduct, isValidDate } from './utils'
 import server, { port } from '../src/server'
 import request from 'supertest'
 import { ANSWERS_PER_PAGE } from '../src/shared/constants'
@@ -211,6 +211,11 @@ describe('testing express server', function () {
     it('route: /threads with valid product with valid lang', async function () {
       const product = await createProduct()
       const language = await createLanguage()
+      const { length } = await createFakeThreads({
+        number: 10,
+        productId: product.id,
+        languageId: language.id
+      })
       return request(server)
         .get(`/threads/${product.code}?hl=${language.code}`)
         .expect('Content-Type', /json/)
@@ -223,6 +228,7 @@ describe('testing express server', function () {
           assert.ok(isValidDate(new Date(body.last_update)))
           assert.ok(body.product_name === product.name)
           assert.ok(Array.isArray(body.threads))
+          assert.equal(body.threads.length, length)
         })
     })
   })

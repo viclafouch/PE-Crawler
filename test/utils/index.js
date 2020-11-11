@@ -21,6 +21,20 @@ export const createFakeAnswers = async ({ productId, languageId, number = 1 }) =
   return Promise.all(answers)
 }
 
+export const createFakeThreads = async ({ productId, languageId, number = 1 }) => {
+  const threads = []
+  for (let index = 0; index < number; index++) {
+    threads.push(database.Thread.create({
+      title: randomstring.generate(50),
+      description: randomstring.generate(200),
+      uuid: getRandomInt(1, 1000),
+      ProductId: productId,
+      LanguageId: languageId
+    }))
+  }
+  return Promise.all(threads)
+}
+
 export const createProduct = () =>
   database.Product.create({ name: 'YouTube', code: 'youtube', communityId: 1 })
 
