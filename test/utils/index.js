@@ -42,3 +42,14 @@ export const createLanguage = () =>
   database.Language.create({ code: 'fr' })
 
 export const isValidDate = (d) => d instanceof Date && !isNaN(d)
+
+export const makeSimpleRequest = (url) => new Promise((resolve, reject) => {
+  const https = require('https')
+  https.get(url, (response) => {
+    let data = ''
+    response.on('data', d => {
+      data += d
+    })
+    response.on('end', () => resolve({ data, response }))
+  }).on('error', reject)
+})

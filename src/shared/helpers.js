@@ -1,5 +1,6 @@
 import colors from 'colors'
 import { validationResult } from 'express-validator'
+import './console'
 
 export const isUrl = string => {
   const regexp = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!-/]))?/

@@ -6,7 +6,7 @@ import { getUuid, isUrl, log, relativePath } from './shared/helpers'
 
 const debug = (args) => IS_DEV && log({ ...args, message: `[ANSWER]: ${args.message}` })
 
-const CREATE_HELP_CENTER_URL = (productCode) => `https://support.google.com/${productCode}/`
+export const CREATE_HELP_CENTER_URL = (productCode) => new URL(`https://support.google.com/${productCode}/`)
 
 const isDifferentLanguage = ($, language) => {
   // e.g: For pt-BR, lang is pt
@@ -17,8 +17,8 @@ const isGuideSteps = ($) => {
   return $('body').find('.guide-button').length > 0
 }
 
-const crawl = ({ product, language }) => new Promise(resolve => {
-  const helpCenterUrl = new URL(CREATE_HELP_CENTER_URL(product.code))
+export const crawl = ({ product, language, options = {} }) => new Promise(resolve => {
+  const helpCenterUrl = CREATE_HELP_CENTER_URL(product.code)
   const crawler = Crawler(helpCenterUrl.toString() + `?hl=${language.code}`)
   global.crawler_threads = crawler
 
@@ -137,15 +137,16 @@ const crawl = ({ product, language }) => new Promise(resolve => {
   })
   crawler.on('complete', () => resolve(answers))
 
-  crawler.maxConcurrency = 3
-  crawler.maxDepth = 8
+  crawler.maxConcurrency = options.maxConcurrency = 3
+  crawler.maxDepth = options.maxDepth || 8
   crawler.start()
 })
 
-export const crawlAnswers = async ({ products, languages }) => {
+export const crawlAnswers = async ({ products, languages, options }) => {
+  const promises = []
   for (const product of products) {
     for (const language of languages) {
-      const answers = await crawl({ product, language })
+      const answers = await crawl({ product, language, options })
 
       const saveAnswers = async () => {
         let nbAdded = 0
@@ -175,10 +176,13 @@ export const crawlAnswers = async ({ products, languages }) => {
         }
         log({ status: 'debug', message: `[ANSWER]: ${nbAdded} answers added for ${product.name} in ${language.code}` })
         log({ status: 'debug', message: `[ANSWER]: ${answers.length - nbAdded} answers updated for ${product.name} in ${language.code}` })
+        return { nbAdded, nbUpdated: answers.length - nbAdded, product, language }
       }
 
       // Don't need to wait for adding threads
-      saveAnswers()
+      promises.push(saveAnswers())
     }
   }
+
+  return promises
 }

@@ -5,7 +5,7 @@ import request from 'supertest'
 import { ANSWERS_PER_PAGE } from '../src/shared/constants'
 const assert = require('assert').strict
 
-describe('testing express server', function () {
+describe('testing api endpoints', function () {
   let listener
 
   beforeEach(async function () {
