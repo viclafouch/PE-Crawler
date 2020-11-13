@@ -33,9 +33,11 @@ describe('testing crawl help-center', function () {
     assert.ok(answer.title !== '')
     assert.ok(answer.description !== '')
     assert.ok(Number.isInteger(answer.uuid))
-    const helpCenterUrl = CREATE_HELP_CENTER_URL(product.code)
+    const helpCenterUrl = CREATE_HELP_CENTER_URL({
+      productCode: product.code,
+      hl: language.code
+    })
     helpCenterUrl.pathname += `/answer/${answer.uuid}`
-    helpCenterUrl.searchParams.set('hl', language.code)
     const { response, data } = await makeSimpleRequest(helpCenterUrl.toString())
     assert.equal(response.statusCode, 200)
     const document = new DomParser().parseFromString(data, 'text/html')

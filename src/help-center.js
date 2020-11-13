@@ -1,12 +1,17 @@
 import cheerio from 'cheerio'
 import Crawler from 'simplecrawler'
 import database from '../db/models'
-import { IS_DEV } from './shared/constants'
+import { IS_DEV, BASE_URL } from './shared/constants'
 import { getUuid, isUrl, log, relativePath } from './shared/helpers'
 
 const debug = (args) => IS_DEV && log({ ...args, message: `[ANSWER]: ${args.message}` })
 
-export const CREATE_HELP_CENTER_URL = (productCode) => new URL(`https://support.google.com/${productCode}/`)
+export const CREATE_HELP_CENTER_URL = ({ hl, productCode }) => {
+  const url = new URL(BASE_URL.toString())
+  url.pathname = `/${productCode}`
+  if (hl) url.searchParams.set('hl', hl)
+  return url
+}
 
 const isDifferentLanguage = ($, language) => {
   // e.g: For pt-BR, lang is pt
@@ -18,8 +23,11 @@ const isGuideSteps = ($) => {
 }
 
 export const crawl = ({ product, language, options = {} }) => new Promise(resolve => {
-  const helpCenterUrl = CREATE_HELP_CENTER_URL(product.code)
-  const crawler = Crawler(helpCenterUrl.toString() + `?hl=${language.code}`)
+  const url = CREATE_HELP_CENTER_URL({
+    productCode: product.code,
+    hl: language.code
+  })
+  const crawler = Crawler(url.toString())
   global.crawler_threads = crawler
 
   const answers = []
@@ -48,7 +56,7 @@ export const crawl = ({ product, language, options = {} }) => new Promise(resolv
 
   crawler.addFetchCondition((queueItem, referrerQueueItem) => {
     if (isUrl(queueItem.url)) {
-      if (queueItem.url.startsWith(helpCenterUrl)) {
+      if (queueItem.url.startsWith(CREATE_HELP_CENTER_URL({ productCode: product.code }).toString())) {
         return queueItem.path.includes('/answer') || queueItem.path.includes('/topic') || queueItem.path.includes('/troubleshooter')
       }
     }

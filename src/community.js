@@ -2,15 +2,23 @@ import cheerio from 'cheerio'
 import Crawler from 'simplecrawler'
 import { log } from './shared/helpers'
 import database from '../db/models'
+import { BASE_URL } from './shared/constants'
 
 const debug = (args) => log({ ...args, message: `[THREADS]: ${args.message}` })
 
-const CREATE_THREADS_URL = (productCode) => `https://support.google.com/${productCode}/threads`
+export const CREATE_THREADS_URL = ({ hl, productCode, maxResults = 60 }) => {
+  const url = new URL(BASE_URL.toString())
+  url.pathname = `/${productCode}/threads`
+  if (hl) url.searchParams.set('hl', hl)
+  if (maxResults) url.searchParams.set('max_results', maxResults)
+  return url
+}
 
-export const crawl = ({ product, language }) => new Promise(resolve => {
-  const url = new URL(CREATE_THREADS_URL(product.code))
-  url.searchParams.set('hl', language.code)
-  url.searchParams.set('max_results', 60)
+export const crawl = ({ product, language, options = {} }) => new Promise(resolve => {
+  const url = CREATE_THREADS_URL({
+    hl: language.code,
+    productCode: product.code
+  })
   const crawler = Crawler(url.toString())
   global.crawler_community = crawler
   let threads = []
@@ -19,7 +27,7 @@ export const crawl = ({ product, language }) => new Promise(resolve => {
     const $ = cheerio.load(buffer.toString('utf8'))
     const listThreadsItems = $('a.thread-list-thread')
     threads = listThreadsItems.map((i, e) => {
-      const uuid = $(e).attr('data-stats-id')
+      const uuid = parseInt($(e).attr('data-stats-id'))
       const title = $(e).find('.thread-list-thread__title')
       const description = $(e).find('.thread-list-thread__snippet')
       return database.Thread.build({
@@ -76,14 +84,15 @@ export const crawl = ({ product, language }) => new Promise(resolve => {
 
   crawler.on('complete', () => resolve(threads))
 
-  crawler.maxDepth = 1
+  crawler.maxDepth = options.maxDepth || 1
   crawler.start()
 })
 
-export const crawlThreads = async ({ products, languages }) => {
+export const crawlThreads = async ({ products, languages, options }) => {
+  const promises = []
   for (const product of products) {
     for (const language of languages) {
-      const threads = await crawl({ product, language })
+      const threads = await crawl({ product, language, options })
       await database.Thread.destroy({
         where: {
           LanguageId: language.id,
@@ -103,10 +112,12 @@ export const crawlThreads = async ({ products, languages }) => {
           status: 'success',
           message: `[${product.name}/${language.code}]: ${threads.length} threads added`
         })
+        return { nbAdded: threads.length, product, language }
       }
 
       // Don't need to wait for adding threads
-      saveThreads()
+      promises.push(saveThreads())
     }
   }
+  return promises
 }
