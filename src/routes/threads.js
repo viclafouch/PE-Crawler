@@ -3,6 +3,7 @@ import { query, param } from 'express-validator'
 import asyncHandler from 'express-async-handler'
 import { validate } from '../shared/helpers'
 import database from '../../db/models'
+import { DEFAULT_LIMIT_THREADS } from '../shared/constants'
 
 const router = express.Router()
 
@@ -14,6 +15,7 @@ export const isValidLocale = async (locale) => {
 
 const validator = () => validate([
   query('hl').isLocale().custom(isValidLocale),
+  query('limit').optional().toInt().isInt({ min: 10 }),
   param('product_code').isString()
 ])
 
@@ -29,7 +31,7 @@ router.get('/', asyncHandler(async (req, res) => {
 }))
 
 router.get('/:product_code', validator(), asyncHandler(async (req, res) => {
-  const { hl: locale } = req.query
+  const { hl: locale, limit = DEFAULT_LIMIT_THREADS } = req.query
   const { product_code: productCode } = req.params
   const product = await database.Product.findOne({ where: { code: productCode } })
 
@@ -38,6 +40,7 @@ router.get('/:product_code', validator(), asyncHandler(async (req, res) => {
   const { id: languageId } = await database.Language.findOne({ where: { code: locale } })
 
   const threads = await database.Thread.findAll({
+    limit,
     where: {
       LanguageId: languageId,
       ProductId: product.id
