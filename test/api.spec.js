@@ -149,7 +149,70 @@ describe('testing api endpoints', function () {
         })
     })
 
-    it('route: /answers search', async function () {
+    it('route: /answers/ simple search', async function () {
+      const productYoutube = await createProduct('youtube')
+      const productChrome = await createProduct('chrome')
+      const languageFr = await createLanguage('fr')
+      const languageEn = await createLanguage('en')
+      const [fakeAnswer] = await createFakeAnswers({
+        number: 20,
+        languageId: languageFr.id,
+        productId: productYoutube.id
+      })
+      const searchValue = fakeAnswer.title
+      await request(server)
+        .post('/answers/')
+        .send({
+          hl: languageFr.code,
+          search: searchValue,
+          products_id: [productYoutube.id],
+          page: 1
+        })
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .then(({ body }) => {
+          assert.equal(body.answers.length, 1)
+          assert.equal(body.nb_pages, 1)
+          assert.equal(body.answers[0].id, fakeAnswer.id)
+        })
+
+      // Not good product
+      await request(server)
+        .post('/answers/')
+        .send({
+          hl: languageFr.code,
+          search: searchValue,
+          products_id: [productChrome.id],
+          page: 1
+        })
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .then(({ body }) => {
+          assert.equal(body.answers.length, 0)
+          assert.equal(body.nb_pages, 0)
+        })
+
+      // Not good language
+      await request(server)
+        .post('/answers/')
+        .send({
+          hl: languageEn.code,
+          search: searchValue,
+          products_id: [productYoutube.id],
+          page: 1
+        })
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .then(({ body }) => {
+          assert.equal(body.answers.length, 0)
+          assert.equal(body.nb_pages, 0)
+        })
+    })
+
+    it('route: /answers/:product_code search', async function () {
       const product = await createProduct()
       const language = await createLanguage()
       const [fakeAnswer] = await createFakeAnswers({

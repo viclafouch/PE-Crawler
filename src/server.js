@@ -18,6 +18,7 @@ class App {
   initializeMiddlewares () {
     this.app.use(helmet())
     this.app.use(express.json())
+    this.app.use(express.urlencoded({ extended: true }))
     this.app.use(cors())
     this.app.use(global.Sentry.Handlers.requestHandler())
     this.app.use(global.Sentry.Handlers.tracingHandler())

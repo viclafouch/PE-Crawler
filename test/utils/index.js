@@ -35,11 +35,11 @@ export const createFakeThreads = async ({ productId, languageId, number = 1 }) =
   return Promise.all(threads)
 }
 
-export const createProduct = () =>
-  database.Product.create({ name: 'YouTube', code: 'youtube', communityId: 1 })
+export const createProduct = (code = 'youtube') =>
+  database.Product.create({ name: randomstring.generate(10), code, communityId: getRandomInt(1, 1000) })
 
-export const createLanguage = () =>
-  database.Language.create({ code: 'fr' })
+export const createLanguage = (code = 'fr') =>
+  database.Language.create({ code })
 
 export const isValidDate = (d) => d instanceof Date && !isNaN(d)
 
