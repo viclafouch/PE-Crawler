@@ -231,5 +231,23 @@ describe('testing api endpoints', function () {
           assert.equal(body.threads.length, length)
         })
     })
+
+    it('route: /threads with limit', async function () {
+      const limit = 12
+      const product = await createProduct()
+      const language = await createLanguage()
+      await createFakeThreads({
+        number: 20,
+        productId: product.id,
+        languageId: language.id
+      })
+      return request(server)
+        .get(`/threads/${product.code}?hl=${language.code}&limit=${limit}`)
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .then(({ body }) => {
+          assert.equal(body.threads.length, limit)
+        })
+    })
   })
 })
