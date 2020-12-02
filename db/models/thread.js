@@ -31,6 +31,14 @@ module.exports = (sequelize, DataTypes) => {
     description: {
       type: DataTypes.STRING(1000),
       allowNull: true
+    },
+    hasRecommendedAnswer: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    hasReply: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     }
   }, {
     sequelize,

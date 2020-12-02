@@ -14,8 +14,8 @@
   "author": "Victor de la Fouchardiere",
   "license": "ISC",
   "dependencies": {
-    "@sentry/node": "^5.27.6",
-    "@sentry/tracing": "^5.27.6",
+    "@sentry/node": "^5.28.0",
+    "@sentry/tracing": "^5.28.0",
     "cheerio": "^1.0.0-rc.3",
     "colors": "^1.4.0",
     "cors": "^2.8.5",
@@ -37,6 +37,7 @@
     "supertest": "^6.0.1"
   },
   "scripts": {
+    "prestart": "npx sequelize-cli db:migrate",
     "start": "npx cross-env NODE_ENV=production node index.js",
     "test": "npx cross-env NODE_ENV=test ./node_modules/.bin/mocha test/*.spec.js -r esm",
     "dev": "node index.js",
