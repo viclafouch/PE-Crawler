@@ -39,6 +39,10 @@ module.exports = (sequelize, DataTypes) => {
     hasReply: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
+    },
+    isNonIssue: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     }
   }, {
     sequelize,

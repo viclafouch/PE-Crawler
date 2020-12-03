@@ -32,12 +32,14 @@ export const crawl = ({ product, language, options = {} }) => new Promise(resolv
       const description = $(e).find('.thread-list-thread__snippet')
       const hasReply = $(e).find('.thread-list-counts--has-reply').length > 0
       const hasRecommendedAnswer = $(e).find('.thread-list-counts--has-recommended-answer').length > 0
+      const isNonIssue = $(e).find('.thread-list-counts--non-issue').length > 0
       return database.Thread.build({
         uuid: uuid,
         title: title.text().trim().substring(0, 200),
         description: description.text().trim().substring(0, 200),
         hasRecommendedAnswer: hasRecommendedAnswer,
         hasReply: hasReply,
+        isNonIssue: isNonIssue,
         LanguageId: language.id,
         ProductId: product.id
       })
