@@ -44,6 +44,7 @@ describe('testing crawl help-center', function () {
     const entities = new Entities()
     const title = document.getElementsByTagName('h1')[0].textContent
     assert.equal(entities.decode(title), entities.decode(answer.title))
+    assert.equal('answer', answer.type)
   })
 
   it('crawl: answer added in db', async function () {

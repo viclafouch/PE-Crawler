@@ -31,6 +31,12 @@ module.exports = (sequelize, DataTypes) => {
     description: {
       type: DataTypes.STRING(1000),
       allowNull: true
+    },
+    type: {
+      type: DataTypes.STRING,
+      validate: {
+        isIn: [['troubleshooter', 'answer']]
+      }
     }
   }, {
     sequelize,

@@ -73,7 +73,10 @@ export const crawl = ({ product, language, options = {} }) => new Promise(resolv
     const description = ($('meta[name=description]').attr('content') || '').substring(0, 200)
     const uuid = getUuid(queueItem.url)
 
-    if (!queueItem.url.includes('/answer/') && !queueItem.url.includes('/troubleshooter/')) {
+    const isTroubleshooterType = queueItem.url.includes('/troubleshooter/')
+    const isAnswerType = queueItem.url.includes('/answer/')
+
+    if (!isTroubleshooterType && !isAnswerType) {
       // e.g https://support.google.com/youtube/topic/9257108
       return
     }
@@ -103,10 +106,14 @@ export const crawl = ({ product, language, options = {} }) => new Promise(resolv
       })
       return
     }
+
+    const type = isTroubleshooterType ? 'troubleshooter' : 'answer'
+
     answers.push({
       title,
       description,
       uuid,
+      type,
       LanguageId: language.id,
       ProductId: product.id
     })
@@ -143,6 +150,7 @@ export const crawl = ({ product, language, options = {} }) => new Promise(resolv
       message: `Status 410 on [${queueItem.url}]: ${response.statusMessage}`
     })
   })
+
   crawler.on('complete', () => resolve(answers))
 
   crawler.maxConcurrency = options.maxConcurrency = 3

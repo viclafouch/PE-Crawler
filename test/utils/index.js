@@ -15,7 +15,8 @@ export const createFakeAnswers = async ({ productId, languageId, number = 1 }) =
       description: randomstring.generate(200),
       uuid: getRandomInt(1, 1000),
       ProductId: productId,
-      LanguageId: languageId
+      LanguageId: languageId,
+      type: 'answer'
     }))
   }
   return Promise.all(answers)
