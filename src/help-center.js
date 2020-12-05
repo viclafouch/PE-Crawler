@@ -168,7 +168,7 @@ export const crawlAnswers = async ({ products, languages, options }) => {
         let nbAdded = 0
         for (const answer of answers) {
           try {
-            const [item, created] = await database.Answer.findOrCreate({
+            const [, created] = await database.Answer.findOrCreate({
               where: {
                 uuid: answer.uuid,
                 LanguageId: answer.LanguageId,
@@ -177,7 +177,7 @@ export const crawlAnswers = async ({ products, languages, options }) => {
               defaults: answer
             })
             if (!created) {
-              await database.Answer.update(item, {
+              await database.Answer.update(answer, {
                 where: {
                   uuid: answer.uuid,
                   LanguageId: answer.LanguageId,
