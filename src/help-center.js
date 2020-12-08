@@ -199,6 +199,8 @@ export const crawlAnswers = async ({ products, languages, options }) => {
           const deprecatedAnswers = await database.Answer.findAll({
             where: {
               updatedAt: {
+                LanguageId: language.id,
+                ProductId: product.id,
                 [Op.lt]: new Date(new Date() - 24 * 60 * 60 * 1000)
               }
             }
