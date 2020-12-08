@@ -1,10 +1,11 @@
 import cheerio from 'cheerio'
 import Crawler from 'simplecrawler'
 import database from '../db/models'
-import { IS_DEV, BASE_URL } from './shared/constants'
+import { Op } from 'sequelize'
+import { BASE_URL } from './shared/constants'
 import { getUuid, isUrl, log, relativePath } from './shared/helpers'
 
-const debug = (args) => IS_DEV && log({ ...args, message: `[ANSWER]: ${args.message}` })
+const debug = (args) => log({ ...args, message: `[ANSWER]: ${args.message}` })
 
 export const CREATE_HELP_CENTER_URL = ({ hl, productCode }) => {
   const url = new URL(BASE_URL.toString())
@@ -33,7 +34,7 @@ export const crawl = ({ product, language, options = {} }) => new Promise(resolv
   const answers = []
 
   crawler.on('crawlstart', () => {
-    log({
+    debug({
       status: 'debug',
       message: `Start crawling answers for ${product.name} in ${language.code.toUpperCase()}`
     })
@@ -190,8 +191,24 @@ export const crawlAnswers = async ({ products, languages, options }) => {
             console.error(error)
           }
         }
+
         log({ status: 'debug', message: `[ANSWER]: ${nbAdded} answers added for ${product.name} in ${language.code}` })
         log({ status: 'debug', message: `[ANSWER]: ${answers.length - nbAdded} answers updated for ${product.name} in ${language.code}` })
+
+        try {
+          const deprecatedAnswers = await database.Answer.findAll({
+            where: {
+              updatedAt: {
+                [Op.lt]: new Date(new Date() - 24 * 60 * 60 * 1000)
+              }
+            }
+          })
+          console.log({
+            deprecatedAnswers: deprecatedAnswers.length
+          })
+        } catch (error) {
+          console.error(error)
+        }
         return { nbAdded, nbUpdated: answers.length - nbAdded, product, language }
       }
 
