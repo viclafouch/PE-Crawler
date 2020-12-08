@@ -196,7 +196,7 @@ export const crawlAnswers = async ({ products, languages, options }) => {
         log({ status: 'debug', message: `[ANSWER]: ${answers.length - nbAdded} answers updated for ${product.name} in ${language.code}` })
 
         try {
-          const deprecatedAnswers = await database.Answer.findAll({
+          await database.Answer.destroy({
             where: {
               updatedAt: {
                 LanguageId: language.id,
@@ -205,10 +205,8 @@ export const crawlAnswers = async ({ products, languages, options }) => {
               }
             }
           })
-          console.log({
-            deprecatedAnswers: deprecatedAnswers.length
-          })
         } catch (error) {
+          global.Sentry.captureException(error)
           console.error(error)
         }
         return { nbAdded, nbUpdated: answers.length - nbAdded, product, language }
