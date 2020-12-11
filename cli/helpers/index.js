@@ -13,6 +13,8 @@ const args = yargs
     type: 'string'
   })
 
+process.env.NODE_ENV = args.argv.env
+
 function loadRCFile (optionsPath) {
   const rcFile = optionsPath || path.resolve(process.cwd(), '.sequelizerc')
   const rcFileResolved = path.resolve(rcFile)
@@ -29,7 +31,6 @@ const getDatabase = async () => {
 }
 
 const getYArgs = () => {
-  process.env.NODE_ENV = args.argv.env
   return args
 }
 
