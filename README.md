@@ -5,9 +5,9 @@
 
 # PE Crawler
 
-PE Crawler est un système d'API automatisé permettant de récupérer les threads de différents produits de Google.
-De plus, il permet également la récupération des données des fiches du centre d'aide des différents produits (e.g: YouTube, Chrome,..).
-Les données sont ensuite servi sur un serveur express.
+PE Crawler is an automated API system for retrieving threads from various Google products.
+Moreover, it also allows to retrieve data from the help center of different products (e.g.: YouTube, Chrome,...).
+The data are then served on an express server.
 
 # Features 
 
@@ -36,7 +36,7 @@ npm audit fix
 
 #### For getting all products:
 ```
-GET /answers/product?hl=fr 
+GET /products
 ```
 
 #### For getting number of answers in total:
@@ -51,7 +51,7 @@ GET /answers/youtube
 
 #### For getting answers by product code (e.g: 'youtube') and language locale (e.g: 'fr'):
 ```
-GET /answers/product?hl=fr 
+GET /answers/youtube?hl=fr 
 ```
 
 #### For getting number of threads in total:
@@ -66,5 +66,13 @@ GET /threads/youtube
 
 #### For getting threads by product code (e.g: 'youtube') and language locale (e.g: 'fr'):
 ```
-GET /threads/product?hl=fr 
+GET /threads/youtube?hl=fr 
 ```
+
+## Contributing
+
+Any contributions and/or pull requests would be welcome.
+
+## License
+
+MIT License.
