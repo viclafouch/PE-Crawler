@@ -14,6 +14,11 @@ export const CREATE_THREADS_URL = ({ hl, productCode, maxResults = 60 }) => {
   return url
 }
 
+const isDifferentLanguage = ($, language) => {
+  // e.g: For pt-BR, lang is pt
+  return !language.startsWith($('html').attr('lang'))
+}
+
 export const crawl = ({ product, language, options = {} }) => new Promise(resolve => {
   const url = CREATE_THREADS_URL({
     hl: language.code,
@@ -26,6 +31,16 @@ export const crawl = ({ product, language, options = {} }) => new Promise(resolv
   crawler.on('fetchcomplete', async function (queueItem, buffer) {
     const $ = cheerio.load(buffer.toString('utf8'))
     const listThreadsItems = $('a.thread-list-thread')
+
+    if (isDifferentLanguage($, language.code)) {
+      // e.g https://support.google.com/chromebook/threads?hl=de
+      debug({
+        status: 'warn',
+        message: `${product.name} has not been translated in ${language.code.toUpperCase()}`
+      })
+      return
+    }
+
     threads = listThreadsItems.map((i, e) => {
       const uuid = parseInt($(e).attr('data-stats-id'))
       const title = $(e).find('.thread-list-thread__title')
