@@ -37,10 +37,19 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         isIn: [['troubleshooter', 'answer']]
       }
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      defaultValue: new Date()
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      defaultValue: new Date()
     }
   }, {
     sequelize,
-    modelName: 'Answer'
+    modelName: 'Answer',
+    timestamps: false
   })
   return Answer
 }

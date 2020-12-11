@@ -1,7 +1,7 @@
 import { before } from 'mocha'
 import database from '../db/models'
-import { createLanguage, createProduct, makeSimpleRequest } from './utils'
-import { crawl, crawlAnswers, CREATE_HELP_CENTER_URL } from '../src/help-center'
+import { createFakeAnswers, createLanguage, createProduct, makeSimpleRequest } from './utils'
+import { crawl, crawlAnswers, CREATE_HELP_CENTER_URL, deprecatedDate } from '../src/help-center'
 import DomParser from 'dom-parser'
 const Entities = require('html-entities').Html5Entities
 const assert = require('assert').strict
@@ -103,5 +103,67 @@ describe('testing crawl help-center', function () {
       }
     })
     assert.equal(count, result.nbAdded)
+  })
+
+  it('crawl: remove deprecated answer from db', async function () {
+    this.timeout(600000)
+    const numberOfAnswersDeprecated = 5
+    const product = await createProduct()
+    const language = await createLanguage()
+
+    await createFakeAnswers({
+      productId: product.id,
+      languageId: language.id,
+      number: numberOfAnswersDeprecated
+    }).then(answers => {
+      return Promise.all(answers.map(answer =>
+        database.Answer.update({
+          updatedAt: deprecatedDate()
+        }, {
+          where: {
+            id: answer.id
+          }
+        })
+      ))
+    })
+
+    const answerDepreacted = await database.Answer.findOne({
+      where: {
+        LanguageId: language.id,
+        ProductId: product.id
+      }
+    })
+
+    const count = await database.Answer.count({
+      where: {
+        LanguageId: language.id,
+        ProductId: product.id
+      }
+    })
+    assert.equal(count, numberOfAnswersDeprecated)
+
+    const promises = await crawlAnswers({
+      products: [product],
+      languages: [language],
+      options: {
+        maxConcurrency: 5,
+        maxDepth: 2
+      }
+    })
+
+    const [result] = await Promise.all(promises)
+
+    assert.equal(result.nbUpdated, 0)
+    assert.ok(result.nbAdded > 0)
+    const allAnswers = await database.Answer.count({
+      where: {
+        LanguageId: language.id,
+        ProductId: product.id
+      }
+    })
+    assert.equal(allAnswers, result.nbAdded)
+
+    const answerDepreactedRemoved = await database.Answer.findByPk(answerDepreacted.id)
+    assert.equal(answerDepreactedRemoved, null)
   })
 })

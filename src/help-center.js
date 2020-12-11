@@ -7,6 +7,8 @@ import { getUuid, isUrl, log, relativePath } from './shared/helpers'
 
 const debug = (args) => log({ ...args, message: `[ANSWER]: ${args.message}` })
 
+export const deprecatedDate = () => new Date(new Date() - 72 * 60 * 60 * 1000)
+
 export const CREATE_HELP_CENTER_URL = ({ hl, productCode }) => {
   const url = new URL(BASE_URL.toString())
   url.pathname = `/${productCode}`
@@ -182,7 +184,8 @@ export const crawlAnswers = async ({ products, languages, options }) => {
                 where: {
                   uuid: answer.uuid,
                   LanguageId: answer.LanguageId,
-                  ProductId: answer.ProductId
+                  ProductId: answer.ProductId,
+                  updatedAt: new Date()
                 }
               })
             } else nbAdded++
@@ -201,7 +204,7 @@ export const crawlAnswers = async ({ products, languages, options }) => {
               LanguageId: language.id,
               ProductId: product.id,
               updatedAt: {
-                [Op.lt]: new Date(new Date() - 72 * 60 * 60 * 1000)
+                [Op.lt]: deprecatedDate()
               }
             }
           })
