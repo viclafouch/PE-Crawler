@@ -52,5 +52,6 @@ db.sequelize = sequelize
 db.Sequelize = Sequelize
 
 db.connectToDatabase = () => sequelize.authenticate()
+db.disconnectDatabase = () => sequelize.close()
 
 module.exports = db
