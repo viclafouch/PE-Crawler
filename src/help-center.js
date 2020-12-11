@@ -198,10 +198,10 @@ export const crawlAnswers = async ({ products, languages, options }) => {
         try {
           await database.Answer.destroy({
             where: {
+              LanguageId: language.id,
+              ProductId: product.id,
               updatedAt: {
-                LanguageId: language.id,
-                ProductId: product.id,
-                [Op.lt]: new Date(new Date() - 24 * 60 * 60 * 1000)
+                [Op.lt]: new Date(new Date() - 72 * 60 * 60 * 1000)
               }
             }
           })
