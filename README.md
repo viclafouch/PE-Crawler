@@ -1,45 +1,70 @@
-# Google Support Crawler (v2.0.0)
+<br />
+<div align="center">
+  <img alt="styled-components" src="https://www.gstatic.com/alkali/apps/bento/images/characters.png" height="150px" />
+</div>
 
-GSP (Google Support Crawler) is an unofficial project that managed 3 things :
-- A crawler that will be started every 24 hours to crawl each articles of a product in a specific language. (Exemple : YouTube in french).
-- A fetcher who behaves like a RSS feed. It collects the last N discussions without answer of a community in a specific language.
-- An API that will be served these datas (crawler / fetcher).
+# PE Crawler
 
-## Products supported :
+PE Crawler est un système d'API automatisé permettant de récupérer les threads de différents produits de Google.
+De plus, il permet également la récupération des données des fiches du centre d'aide des différents produits (e.g: YouTube, Chrome,..).
+Les données sont ensuite servi sur un serveur express.
 
-- Google Chrome
-- Google Photos
-- Google Maps
-- Google AdSense
-- Gmail
-- YouTube
-- Google Search
-- Google Account
-- Google Calendar
-- Google Play
-- Google My Business
-- Google Fi
-- Google Translate
-- G Suite Admininistrator
-- Files by Google
-- Docs Editor
-- Course Kit
-- Google Drive
+# Features 
 
-## Languages supported :
+* No registration
+* Zero-config
+* Basic API
+* "Has many" relationships
+* Filters and nested resources
+* Supports GET, POST
+* HTTPS
+* Compatible with React, Angular, Vue, Ember, ...
 
-- French
-- English
-- Deutsch
-- Português (Brasil)
-- Español
-- Pусский
-- Yкраїнська
-- Indonesia
-- Polski
+## Install
 
-### Installing from source
+```bash
+$ npm install
+$ npm run dev
+```
 
-1. Clone the repository: `git clone https://github.com/viclafouch/google-support-crawler.git`
-2. Install the npm dependencies `npm install`
-3. Build the inject script: `npm run start`
+Might need to run
+```
+npm audit fix
+```
+
+### End-points
+
+#### For getting all products:
+```
+GET /answers/product?hl=fr 
+```
+
+#### For getting number of answers in total:
+```
+GET /answers
+```
+
+#### For getting answers by product code (e.g: 'youtube') :
+```
+GET /answers/youtube
+```
+
+#### For getting answers by product code (e.g: 'youtube') and language locale (e.g: 'fr'):
+```
+GET /answers/product?hl=fr 
+```
+
+#### For getting number of threads in total:
+```
+GET /threads
+```
+
+#### For getting threads by product code (e.g: 'youtube') :
+```
+GET /threads/youtube
+```
+
+#### For getting threads by product code (e.g: 'youtube') and language locale (e.g: 'fr'):
+```
+GET /threads/product?hl=fr 
+```
