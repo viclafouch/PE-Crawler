@@ -39,6 +39,11 @@ npm audit fix
 GET /products
 ```
 
+#### For getting all languages:
+```
+GET /languages
+```
+
 #### For getting number of answers in total:
 ```
 GET /answers
@@ -52,6 +57,20 @@ GET /answers/youtube
 #### For getting answers by product code (e.g: 'youtube') and language locale (e.g: 'fr'):
 ```
 GET /answers/youtube?hl=fr 
+```
+
+#### For getting a pagination for answers by filtering by language, search value, and products id:
+```
+POST /answers/youtube
+```
+
+```js
+body {
+  hl: 'fr',
+  page: 2,
+  search: 'foo',
+  products_id: [3, 9]
+}
 ```
 
 #### For getting number of threads in total:
