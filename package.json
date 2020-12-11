@@ -5,7 +5,7 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/viclafouch/google-support-crawler.git"
+    "url": "https://github.com/viclafouch/PE-crawler.git"
   },
   "engines": {
     "node": "14.x",
