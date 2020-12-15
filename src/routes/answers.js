@@ -4,7 +4,7 @@ import asyncHandler from 'express-async-handler'
 import { validate } from '../shared/helpers'
 import { Op } from 'sequelize'
 import database from '../../db/models'
-import { ANSWERS_PER_PAGE } from '../shared/constants'
+import { ANSWERS_PER_PAGE, IS_DEV } from '../shared/constants'
 
 const router = express.Router()
 
@@ -89,8 +89,19 @@ router.get('/:product_code', validate([
 
   const where = {
     LanguageId: languageId,
-    ProductId: product.id,
-    ...(search ? { title: { [Op.like]: `%${search}%` } } : null)
+    ProductId: product.id
+  }
+
+  if (search) {
+    if (IS_DEV) {
+      where.title = {
+        [Op.like]: `%${search}%`
+      }
+    } else {
+      where.title = {
+        [Op.iLike]: `%${search}%`
+      }
+    }
   }
 
   const { nbPages, answers } = await paginateAnswers({ where, page })
