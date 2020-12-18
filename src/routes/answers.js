@@ -60,8 +60,14 @@ router.post('/', validate([
     LanguageId: languageId,
     ProductId: {
       [Op.in]: productsId
-    },
-    ...(search ? { title: { [Op.like]: `%${search}%` } } : null)
+    }
+  }
+
+  if (search) {
+    const op = !IS_DEV ? Op.iLike : Op.like
+    where.title = {
+      [op]: `%${search}%`
+    }
   }
 
   const { nbPages, answers } = await paginateAnswers({ where, page })
@@ -93,14 +99,9 @@ router.get('/:product_code', validate([
   }
 
   if (search) {
-    if (IS_DEV) {
-      where.title = {
-        [Op.like]: `%${search}%`
-      }
-    } else {
-      where.title = {
-        [Op.iLike]: `%${search}%`
-      }
+    const op = !IS_DEV ? Op.iLike : Op.like
+    where.title = {
+      [op]: `%${search}%`
     }
   }
 
