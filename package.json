@@ -16,7 +16,7 @@
   "dependencies": {
     "@sentry/node": "^5.29.2",
     "@sentry/tracing": "^5.29.2",
-    "cheerio": "^1.0.0-rc.3",
+    "cheerio": "^1.0.0-rc.5",
     "colors": "^1.4.0",
     "cors": "^2.8.5",
     "dom-parser": "^0.1.6",
@@ -24,9 +24,9 @@
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "express-async-handler": "^1.1.4",
-    "express-validator": "^6.8.0",
+    "express-validator": "^6.9.0",
     "helmet": "^4.2.0",
-    "html-entities": "^1.3.3",
+    "html-entities": "^1.4.0",
     "husky": "^4.3.0",
     "mocha": "^8.2.1",
     "pg": "^8.5.1",
@@ -56,7 +56,7 @@
     }
   },
   "devDependencies": {
-    "eslint": "^7.15.0",
+    "eslint": "^7.16.0",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-mocha": "^8.0.0",
     "standard": "^16.0.3",
