@@ -8,15 +8,15 @@
     "url": "https://github.com/viclafouch/PE-crawler.git"
   },
   "engines": {
-    "node": "14.x",
-    "npm": "6.x"
+    "node": "16.x",
+    "npm": "7.x"
   },
   "author": "Victor de la Fouchardiere",
   "license": "ISC",
   "dependencies": {
-    "@sentry/node": "^5.29.2",
-    "@sentry/tracing": "^5.29.2",
-    "cheerio": "^1.0.0-rc.5",
+    "@sentry/node": "^6.11.0",
+    "@sentry/tracing": "^6.11.0",
+    "cheerio": "^1.0.0-rc.10",
     "colors": "^1.4.0",
     "cors": "^2.8.5",
     "dom-parser": "^0.1.6",
@@ -29,12 +29,12 @@
     "html-entities": "^1.4.0",
     "husky": "^4.3.0",
     "mocha": "^8.2.1",
-    "pg": "^8.5.1",
-    "randomstring": "^1.1.5",
-    "sequelize": "^6.3.5",
+    "pg": "^8.7.1",
+    "randomstring": "^1.2.1",
+    "sequelize": "^6.6.5",
     "simplecrawler": "^1.1.9",
-    "sqlite3": "^5.0.0",
-    "supertest": "^6.0.1"
+    "sqlite3": "^5.0.2",
+    "supertest": "^6.1.4"
   },
   "scripts": {
     "prestart": "npx sequelize-cli db:migrate",
@@ -56,10 +56,10 @@
     }
   },
   "devDependencies": {
-    "eslint": "^7.16.0",
-    "eslint-config-standard": "^16.0.2",
-    "eslint-plugin-mocha": "^8.0.0",
+    "eslint": "^7.32.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-mocha": "^9.0.0",
     "standard": "^16.0.3",
-    "yargs": "^16.2.0"
+    "yargs": "^17.1.0"
   }
 }
