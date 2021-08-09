@@ -20,14 +20,13 @@
     "colors": "^1.4.0",
     "cors": "^2.8.5",
     "dom-parser": "^0.1.6",
-    "dotenv": "^8.2.0",
-    "esm": "^3.2.25",
+    "dotenv": "^10.0.0",
+    "esm": "3.2.25",
     "express": "^4.17.1",
     "express-async-handler": "^1.1.4",
-    "express-validator": "^6.9.0",
-    "helmet": "^4.2.0",
-    "html-entities": "^1.4.0",
-    "husky": "^4.3.0",
+    "express-validator": "^6.12.1",
+    "helmet": "^4.6.0",
+    "html-entities": "^2.3.2",
     "mocha": "^8.2.1",
     "pg": "^8.7.1",
     "randomstring": "^1.2.1",
@@ -42,23 +41,19 @@
     "test": "npx cross-env NODE_ENV=test ./node_modules/.bin/mocha test/*.spec.js -r esm",
     "dev": "node index.js",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "prepare": "husky install"
   },
   "standard": {
     "env": [
       "mocha"
     ]
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint",
-      "pre-push": "npm run test"
-    }
-  },
   "devDependencies": {
     "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-mocha": "^9.0.0",
+    "husky": "^7.0.1",
     "standard": "^16.0.3",
     "yargs": "^17.1.0"
   }

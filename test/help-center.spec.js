@@ -3,7 +3,7 @@ import database from '../db/models'
 import { createFakeAnswers, createLanguage, createProduct, makeSimpleRequest } from './utils'
 import { crawl, crawlAnswers, CREATE_HELP_CENTER_URL, deprecatedDate } from '../src/help-center'
 import DomParser from 'dom-parser'
-const Entities = require('html-entities').Html5Entities
+import { decode } from 'html-entities'
 const assert = require('assert').strict
 
 describe('testing crawl help-center', function () {
@@ -41,9 +41,8 @@ describe('testing crawl help-center', function () {
     const { response, data } = await makeSimpleRequest(helpCenterUrl.toString())
     assert.equal(response.statusCode, 200)
     const document = new DomParser().parseFromString(data, 'text/html')
-    const entities = new Entities()
     const title = document.getElementsByTagName('h1')[0].textContent
-    assert.equal(entities.decode(title), entities.decode(answer.title))
+    assert.equal(decode(title), decode(answer.title))
     assert.equal('answer', answer.type)
   })
 
