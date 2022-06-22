@@ -32,7 +32,7 @@
     "randomstring": "^1.2.1",
     "sequelize": "^6.6.5",
     "simplecrawler": "^1.1.9",
-    "sqlite3": "^5.0.2",
+    "sqlite3": "^5.0.3",
     "supertest": "^6.1.4"
   },
   "scripts": {
