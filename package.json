@@ -22,7 +22,7 @@
     "dom-parser": "^0.1.6",
     "dotenv": "^10.0.0",
     "esm": "3.2.25",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "express-async-handler": "^1.1.4",
     "express-validator": "^6.12.1",
     "helmet": "^4.6.0",
