@@ -1,0 +1,208 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "communityId": 659278,
+      "name": "YouTube",
+      "code": "youtube"
+    },
+    {
+      "id": 2,
+      "communityId": 697265,
+      "name": "Chrome",
+      "code": "chrome"
+    },
+    {
+      "id": 3,
+      "communityId": 678735,
+      "name": "Gmail",
+      "code": "mail"
+    },
+    {
+      "id": 4,
+      "communityId": 1452138,
+      "name": "Adsense",
+      "code": "adsense"
+    },
+    {
+      "id": 5,
+      "communityId": 1749766,
+      "name": "Google Search",
+      "code": "websearch"
+    },
+    {
+      "id": 6,
+      "communityId": 24053,
+      "name": "Google Photos",
+      "code": "photos"
+    },
+    {
+      "id": 7,
+      "communityId": 593221,
+      "name": "Google Maps",
+      "code": "maps"
+    },
+    {
+      "id": 8,
+      "communityId": 202587,
+      "name": "Google Calendar",
+      "code": "calendar"
+    },
+    {
+      "id": 9,
+      "communityId": 553472,
+      "name": "Google Account",
+      "code": "accounts"
+    },
+    {
+      "id": 10,
+      "communityId": 412208,
+      "name": "Google Play",
+      "code": "googleplay"
+    },
+    {
+      "id": 11,
+      "communityId": 1081366,
+      "name": "Google My Business",
+      "code": "business"
+    },
+    {
+      "id": 12,
+      "communityId": 1631170,
+      "name": "Google Translate",
+      "code": "translate"
+    },
+    {
+      "id": 13,
+      "communityId": 202537,
+      "name": "Google Fi",
+      "code": "fi"
+    },
+    {
+      "id": 15,
+      "communityId": 654222,
+      "name": "Files by Google",
+      "code": "files"
+    },
+    {
+      "id": 16,
+      "communityId": 570924,
+      "name": "Google Drive",
+      "code": "drive"
+    },
+    {
+      "id": 17,
+      "communityId": 1386689,
+      "name": "Docs Editor",
+      "code": "docs"
+    },
+    {
+      "id": 18,
+      "communityId": 224051,
+      "name": "Course Kit",
+      "code": "educoursekit"
+    },
+    {
+      "id": 19,
+      "communityId": 1663244,
+      "name": "Search Console",
+      "code": "webmasters"
+    },
+    {
+      "id": 20,
+      "communityId": 344043,
+      "name": "Pixel Phone",
+      "code": "pixelphone"
+    },
+    {
+      "id": 21,
+      "communityId": 1631239,
+      "name": "Blogger",
+      "code": "blogger"
+    },
+    {
+      "id": 22,
+      "communityId": 589387,
+      "name": "Google Voice",
+      "code": "voice"
+    },
+    {
+      "id": 23,
+      "communityId": 804218,
+      "name": "Google Classroom",
+      "code": "educlassroom"
+    },
+    {
+      "id": 24,
+      "communityId": 213251,
+      "name": "Expeditions",
+      "code": "eduexpeditions"
+    },
+    {
+      "id": 25,
+      "communityId": 641710,
+      "name": "Jamboard",
+      "code": "jamboard"
+    },
+    {
+      "id": 26,
+      "communityId": 2369244,
+      "name": "Android",
+      "code": "android"
+    },
+    {
+      "id": 27,
+      "communityId": 465605,
+      "name": "Chromebook",
+      "code": "chromebook"
+    },
+    {
+      "id": 28,
+      "communityId": 356328,
+      "name": "Google Pixel Slate",
+      "code": "pixelslate"
+    },
+    {
+      "id": 29,
+      "communityId": 344042,
+      "name": "Google Pixelbook",
+      "code": "pixelbook"
+    },
+    {
+      "id": 30,
+      "communityId": 6,
+      "name": "Wear OS by Google",
+      "code": "wearos"
+    },
+    {
+      "id": 31,
+      "communityId": 13987919,
+      "name": "Google Meet",
+      "code": "meet"
+    },
+    {
+      "id": 32,
+      "communityId": 2370025,
+      "name": "Android Auto",
+      "code": "androidauto"
+    },
+    {
+      "id": 33,
+      "communityId": 13987821,
+      "name": "Google Groupes",
+      "code": "groups"
+    },
+    {
+      "id": 14,
+      "communityId": 593739,
+      "name": "Google Workspace Admin",
+      "code": "a"
+    },
+    {
+      "id": 34,
+      "communityId": 572346,
+      "name": "Google Duo",
+      "code": "duo"
+    }
+  ]
+}

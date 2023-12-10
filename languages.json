@@ -1,0 +1,48 @@
+{
+  "languages": [
+    {
+      "id": 1,
+      "code": "fr"
+    },
+    {
+      "id": 2,
+      "code": "en"
+    },
+    {
+      "id": 3,
+      "code": "es"
+    },
+    {
+      "id": 4,
+      "code": "de"
+    },
+    {
+      "id": 5,
+      "code": "pt-BR"
+    },
+    {
+      "id": 6,
+      "code": "ru"
+    },
+    {
+      "id": 7,
+      "code": "uk"
+    },
+    {
+      "id": 8,
+      "code": "id"
+    },
+    {
+      "id": 9,
+      "code": "tr"
+    },
+    {
+      "id": 10,
+      "code": "pl"
+    },
+    {
+      "id": 11,
+      "code": "ja"
+    }
+  ]
+}
